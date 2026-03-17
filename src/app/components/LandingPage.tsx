@@ -123,6 +123,27 @@ export function LandingPage() {
         </div>
       </div>
 
+      {/* Video Section */}
+      <div className="max-w-4xl mx-auto px-6 pb-16">
+        <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
+          See nAnoCards in Action
+        </h2>
+        <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-lg bg-black">
+          <video
+            className="w-full h-full object-cover"
+            controls
+            preload="metadata"
+            poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 675'%3E%3Crect fill='%231e3a8a' width='1200' height='675'/%3E%3C/svg%3E"
+          >
+            <source
+              src="https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4"
+              type="video/mp4"
+            />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div>
+
       {/* Feature Cards */}
       <div className="max-w-6xl mx-auto px-6 pb-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

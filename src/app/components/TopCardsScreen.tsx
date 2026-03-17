@@ -83,7 +83,24 @@ export function TopCardsScreen() {
 
       if (response.ok) {
         const data = await response.json();
-        const cardsArray = data.cards || [];
+        let cardsArray = data.cards || [];
+
+        // Create featured card as default top card
+        const featuredCard: any = {
+          id: 'featured-001',
+          title: 'nAnoCards Overview',
+          videoUrl: 'https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
+          videoTime: '2:30',
+          likes: 1000,
+          createdBy: 'nAnoCards',
+          createdAt: new Date(0).toISOString(), // Very old date so it sorts to top
+          information: 'Watch this quick demo to learn how to create and share your nano learning cards with the world.',
+          insights: {},
+          globalCardNumber: '001',
+        };
+
+        // Add featured card to beginning
+        cardsArray = [featuredCard, ...cardsArray];
 
         // Sort by creation date (oldest first) to assign consistent card numbers
         const sortedByCreation = cardsArray.sort((a: NanoCard, b: NanoCard) =>
