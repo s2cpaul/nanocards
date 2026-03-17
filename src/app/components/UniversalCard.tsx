@@ -4,7 +4,7 @@ import {
   Mail, Link as LinkIcon, Edit3, Facebook,
 } from "lucide-react";
 import { QRCodeSVG } from 'qrcode.react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 
 interface UniversalCardProps {
@@ -50,6 +50,8 @@ export function UniversalCard({
   const cardUrl = storedQrCodeUrl || `${window.location.origin}/card/${id}`;
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleCopyLink = async () => {
     try {
@@ -60,6 +62,18 @@ export function UniversalCard({
     } catch (error) {
       console.error('Failed to copy link:', error);
       toast.error('Failed to copy link');
+    }
+  };
+
+  const handlePlayVideo = async () => {
+    if (videoRef.current) {
+      try {
+        await videoRef.current.play();
+        setIsVideoPlaying(true);
+      } catch (error) {
+        console.error('Failed to play video:', error);
+        toast.error('Failed to play video');
+      }
     }
   };
 
@@ -82,22 +96,30 @@ export function UniversalCard({
           />
         ) : videoUrl ? (
           <video
+            ref={videoRef}
             className="absolute inset-0 w-full h-full object-cover"
             src={`${videoUrl}#t=0.1`}
             preload="metadata"
             muted
             playsInline
+            onEnded={() => setIsVideoPlaying(false)}
           />
         ) : (
           <div className="absolute inset-0 bg-gray-900" />
         )}
 
         {/* Play Button */}
-        <button className="absolute inset-0 flex items-center justify-center">
-          <div className="w-14 h-14 bg-[#1e3a8a]/90 rounded-full flex items-center justify-center shadow-lg">
-            <div className="w-0 h-0 border-l-[16px] border-l-white border-t-[11px] border-t-transparent border-b-[11px] border-b-transparent ml-1" />
-          </div>
-        </button>
+        {!isVideoPlaying && (
+          <button
+            className="absolute inset-0 flex items-center justify-center"
+            onClick={handlePlayVideo}
+            aria-label="Play video"
+          >
+            <div className="w-14 h-14 bg-[#1e3a8a]/90 rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-0 h-0 border-l-[16px] border-l-white border-t-[11px] border-t-transparent border-b-[11px] border-b-transparent ml-1" />
+            </div>
+          </button>
+        )}
 
         {/* QR Code - Top Right */}
         <div className="absolute top-3 right-3 bg-white rounded-xl p-2 shadow-lg">
