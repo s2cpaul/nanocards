@@ -13,6 +13,10 @@ export interface NanoCard {
   country?: string;
   stage?: string;
   category?: string;
+  globalCardNumber?: string; // Card number in sequence (001, 002, etc.)
+  isPublic?: boolean; // Whether card is visible to all
+  visibility?: 'public' | 'private'; // Visibility setting
+  likedBy?: string[]; // Array of user IDs who liked this card
   featuredLink?: {
     url: string;
     title: string;

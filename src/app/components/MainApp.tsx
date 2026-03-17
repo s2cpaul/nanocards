@@ -35,29 +35,79 @@ export function MainApp() {
 
   const loadCards = async () => {
     try {
-      const headers = await getAuthHeaders();
-      const response = await fetch(`${API_BASE_URL}/cards`, { headers });
-      const data = await response.json();
+      // PRIORITY: Create Card #001 - The featured nAnoCards introduction card
+      // This is ALWAYS displayed first and is essential for the app experience
+      const featuredCard001: NanoCard = {
+        id: 'nanocards-001',
+        title: 'nAnoCards Overview',
+        videoUrl: 'https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
+        videoTime: '2:30',
+        likes: 1000,
+        createdBy: 'carapaulson1@gmail.com',
+        createdAt: new Date('2024-01-01').toISOString(),
+        information: 'nAnoCards is a progressive web app for creating and sharing AI product pitch cards. This is the featured introduction card visible to all users.',
+        insights: {
+          information: 'Learn about edge computing for micro-learning',
+          officialSite: 'https://nanocards.now',
+        },
+        country: 'USA',
+        stage: 'Growth/Scale',
+        globalCardNumber: '001',
+        isPublic: true,
+        visibility: 'public',
+        qrCodeUrl: '/card/nanocards-001',
+        likedBy: [],
+      };
 
-      if (response.ok) {
-        const cardsArray = data.cards || [];
-        const sortedByCreation = cardsArray.sort((a: NanoCard, b: NanoCard) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
+      let cardsArray: NanoCard[] = [featuredCard001]; // START with Card #001
 
-        const cardsWithNumbers = sortedByCreation.map((card: NanoCard, index: number) => ({
-          ...card,
-          globalCardNumber: String(index + 1).padStart(3, '0'),
-        }));
+      // Try to load additional cards from API
+      try {
+        const headers = await getAuthHeaders();
+        const response = await fetch(`${API_BASE_URL}/cards`, { headers });
+        const data = await response.json();
 
-        setCards(cardsWithNumbers);
-      } else {
-        console.error('Failed to load cards:', data.error);
-        setCards([]);
+        if (response.ok) {
+          const apiCards = (data.cards || []).filter((card: NanoCard) => card.id !== 'nanocards-001');
+          cardsArray = [featuredCard001, ...apiCards];
+        } else {
+          console.warn('API load failed, showing Card #001 only:', data.error);
+        }
+      } catch (error) {
+        console.warn('API fetch failed, showing Card #001 only:', error);
+        // Continue with just Card #001
       }
+
+      // Sort by creation date (oldest first) for consistent numbering
+      const sortedByCreation = cardsArray.sort((a: NanoCard, b: NanoCard) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+
+      // Assign global card numbers
+      const cardsWithNumbers = sortedByCreation.map((card: NanoCard, index: number) => ({
+        ...card,
+        globalCardNumber: String(index + 1).padStart(3, '0'),
+      }));
+
+      setCards(cardsWithNumbers);
     } catch (error) {
       console.error('Error loading cards:', error);
-      setCards([]);
+      // Ensure Card #001 is ALWAYS shown, even if everything fails
+      const fallbackCard: NanoCard = {
+        id: 'nanocards-001',
+        title: 'nAnoCards Overview',
+        videoUrl: 'https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
+        videoTime: '2:30',
+        likes: 1000,
+        createdBy: 'carapaulson1@gmail.com',
+        createdAt: new Date('2024-01-01').toISOString(),
+        information: 'nAnoCards is a progressive web app for creating and sharing AI product pitch cards.',
+        insights: {},
+        globalCardNumber: '001',
+        qrCodeUrl: '/card/nanocards-001',
+        likedBy: [],
+      };
+      setCards([fallbackCard]);
     } finally {
       setLoading(false);
     }
