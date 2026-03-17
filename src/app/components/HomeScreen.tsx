@@ -63,8 +63,10 @@ export function HomeScreen() {
             nAnoCards
           </h1>
           <p className="text-lg md:text-xl text-gray-600 mb-6">
-            Mobile-first AI product cards<br />
-            for innovators & entrepreneurs!
+            Edge enabled<br />
+            micro learning!
+            <br />
+            <span className="text-sm text-gray-500">replaces Mobile-first learning with AI product cards!</span>
           </p>
           
           {/* View Toggle */}
@@ -97,7 +99,7 @@ export function HomeScreen() {
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
-              Main App
+              Cards
             </button>
           </div>
         </div>
@@ -420,6 +422,16 @@ export function HomeScreen() {
                             >
                               View Cards
                             </button>
+                            
+                            {/* Evidence Based Learning & AI Leadership */}
+                            <div className="text-center pt-2">
+                              <p className="text-white text-sm font-medium">
+                                Evidence Based Learning
+                              </p>
+                              <p className="text-blue-300 text-sm font-medium">
+                                & AI Leadership!
+                              </p>
+                            </div>
                             
                             <button
                               onClick={() => {
