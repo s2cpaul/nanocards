@@ -95,8 +95,9 @@ export function EditCardModal({ isOpen, onClose, onSave, initialData, isSaving =
         <div className="p-6 space-y-4">
           {/* Title Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+            <label htmlFor="edit-title" className="block text-sm font-medium text-gray-700 mb-2">Title</label>
             <input
+              id="edit-title"
               type="text"
               value={editedData.title}
               onChange={(e) => {
@@ -111,8 +112,9 @@ export function EditCardModal({ isOpen, onClose, onSave, initialData, isSaving =
 
           {/* Objective Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Objective</label>
+            <label htmlFor="edit-objective" className="block text-sm font-medium text-gray-700 mb-2">Objective</label>
             <textarea
+              id="edit-objective"
               value={editedData.objective || ''}
               onChange={(e) => setEditedData({ ...editedData, objective: e.target.value.slice(0, 256) })}
               maxLength={256}
@@ -124,8 +126,9 @@ export function EditCardModal({ isOpen, onClose, onSave, initialData, isSaving =
 
           {/* Information Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Information</label>
+            <label htmlFor="edit-information" className="block text-sm font-medium text-gray-700 mb-2">Information</label>
             <textarea
+              id="edit-information"
               value={editedData.information || ''}
               onChange={(e) => setEditedData({ ...editedData, information: e.target.value.slice(0, 256) })}
               maxLength={256}
@@ -138,8 +141,9 @@ export function EditCardModal({ isOpen, onClose, onSave, initialData, isSaving =
 
           {/* Video URL Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Video URL</label>
+            <label htmlFor="edit-videoUrl" className="block text-sm font-medium text-gray-700 mb-2">Video URL</label>
             <input
+              id="edit-videoUrl"
               type="url"
               value={editedData.videoUrl || ''}
               onChange={(e) => setEditedData({ ...editedData, videoUrl: e.target.value })}
@@ -150,8 +154,9 @@ export function EditCardModal({ isOpen, onClose, onSave, initialData, isSaving =
 
           {/* Video Duration Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Video Duration</label>
+            <label htmlFor="edit-videoTime" className="block text-sm font-medium text-gray-700 mb-2">Video Duration</label>
             <input
+              id="edit-videoTime"
               type="text"
               value={editedData.videoTime || ''}
               onChange={(e) => setEditedData({ ...editedData, videoTime: e.target.value })}
@@ -162,8 +167,9 @@ export function EditCardModal({ isOpen, onClose, onSave, initialData, isSaving =
 
           {/* Thumbnail URL Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail URL</label>
+            <label htmlFor="edit-thumbnailUrl" className="block text-sm font-medium text-gray-700 mb-2">Thumbnail URL</label>
             <input
+              id="edit-thumbnailUrl"
               type="url"
               value={editedData.thumbnailUrl || ''}
               onChange={(e) => setEditedData({ ...editedData, thumbnailUrl: e.target.value })}
@@ -174,8 +180,9 @@ export function EditCardModal({ isOpen, onClose, onSave, initialData, isSaving =
 
           {/* Category Field - Show to all users but with limited options for non-admins */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+            <label htmlFor="edit-category" className="block text-sm font-medium text-gray-700 mb-2">Category</label>
             <select
+              id="edit-category"
               value={editedData.category || 'Pitch'}
               onChange={(e) => setEditedData({ ...editedData, category: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
@@ -189,9 +196,10 @@ export function EditCardModal({ isOpen, onClose, onSave, initialData, isSaving =
           {/* Course Title Field - Show only when Category is Training */}
           {editedData.category === 'Training' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Course Title</label>
+              <label htmlFor="edit-courseTitle" className="block text-sm font-medium text-gray-700 mb-2">Course Title</label>
               <div className="relative">
                 <input
+                  id="edit-courseTitle"
                   type="text"
                   value={editedData.courseTitle || ''}
                   onChange={(e) => setEditedData({ ...editedData, courseTitle: e.target.value })}
