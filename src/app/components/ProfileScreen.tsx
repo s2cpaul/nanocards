@@ -91,7 +91,9 @@ export function ProfileScreen() {
       const userEmail = session.user.email || "";
       setCurrentUserEmail(userEmail);
       setIsAdmin(userEmail === "carapaulson1@gmail.com");
-      setDisplayName(session.user.user_metadata?.name || "");
+      // Use email prefix as fallback display name
+      const initialName = session.user.user_metadata?.name || userEmail.split("@")[0] || "User";
+      setDisplayName(initialName);
       loadUserData(userEmail);
     } catch (error) {
       console.error("Auth check error:", error);
@@ -110,7 +112,10 @@ export function ProfileScreen() {
 
       if (profileResponse.ok) {
         const profileData = await profileResponse.json();
-        setDisplayName(profileData.displayName || '');
+        // Update display name from backend, or keep the fallback we set earlier
+        if (profileData.displayName) {
+          setDisplayName(profileData.displayName);
+        }
         setSubscriptionTier(profileData.subscriptionTier || 'free');
         setUserStats(prev => ({
           ...prev,
