@@ -37,18 +37,29 @@ export function LoginScreen() {
     setIsLoading(true);
     try {
       console.log('[LoginScreen] Attempting login for:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
         console.error("Login error:", error);
+        console.error("Error message:", error.message);
+        console.error("Error status:", error.status);
+        
         // Provide more specific error messages
-        const errorMessage = error.message?.includes('Invalid login credentials') 
-          ? "Invalid email or password"
-          : error.message?.includes('Email not confirmed')
-          ? "Please confirm your email first"
-          : error.message?.includes('fetch')
-          ? "Network error - please check your connection"
-          : error.message || "Failed to login";
+        let errorMessage = "Failed to login";
+        
+        if (error.message?.includes('Invalid login credentials')) {
+          errorMessage = "Invalid email or password";
+        } else if (error.message?.includes('Email not confirmed')) {
+          errorMessage = "Please confirm your email first";
+        } else if (error.message?.includes('NetworkError') || error.message?.includes('fetch') || error.message?.includes('Failed to fetch')) {
+          errorMessage = "Network error - please check your internet connection and try again";
+        } else if (error.status === 0) {
+          errorMessage = "Cannot reach Supabase - check your internet connection";
+        } else {
+          errorMessage = error.message || "Failed to login";
+        }
+        
         toast.error(errorMessage);
         setIsLoading(false);
         return;
@@ -68,9 +79,21 @@ export function LoginScreen() {
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      const errorMessage = error?.message?.includes('fetch')
-        ? "Network error - please check your internet connection"
-        : error?.message || "Failed to login";
+      console.error("Error type:", error?.constructor?.name);
+      console.error("Error details:", {
+        message: error?.message,
+        stack: error?.stack?.split('\n')[0],
+      });
+      
+      let errorMessage = "Failed to login";
+      if (error?.message?.includes('NetworkError') || error?.message?.includes('fetch')) {
+        errorMessage = "Network error - please check your internet connection";
+      } else if (error?.message?.includes('offline')) {
+        errorMessage = "You appear to be offline - please check your internet";
+      } else {
+        errorMessage = error?.message || "Failed to login";
+      }
+      
       toast.error(errorMessage);
       setIsLoading(false);
     }

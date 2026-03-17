@@ -62,29 +62,37 @@ export function CreateCard() {
   const [textLines, setTextLines] = useState<string[]>([""]);
 
   useEffect(() => {
-    const guestMode = localStorage.getItem('guestMode') === 'true';
-    setIsGuestMode(guestMode);
-
-    if (!guestMode) {
-      const getUserInfo = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          setCurrentUserEmail(session.user.email || '');
-          try {
-            const headers = await getAuthHeaders();
-            const response = await fetch(`${API_BASE_URL}/subscription/status`, { headers });
-            if (response.ok) {
-              const data = await response.json();
-              setUserPoints(data.points || 0);
-              setUserTier(data.tier || 'Free');
-            }
-          } catch (error) {
-            console.error('Error fetching user points:', error);
+    const checkAuth = async () => {
+      // Check actual Supabase session FIRST
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        // User is logged in - NOT guest mode
+        setIsGuestMode(false);
+        setCurrentUserEmail(session.user.email || '');
+        
+        // Clear any stale guestMode flag
+        localStorage.removeItem('guestMode');
+        
+        try {
+          const headers = await getAuthHeaders();
+          const response = await fetch(`${API_BASE_URL}/subscription/status`, { headers });
+          if (response.ok) {
+            const data = await response.json();
+            setUserPoints(data.points || 0);
+            setUserTier(data.tier || 'Free');
           }
+        } catch (error) {
+          console.error('Error fetching user points:', error);
         }
-      };
-      getUserInfo();
-    }
+      } else {
+        // No session - check if guest mode
+        const guestMode = localStorage.getItem('guestMode') === 'true';
+        setIsGuestMode(guestMode);
+      }
+    };
+    
+    checkAuth();
   }, [navigate]);
 
   useEffect(() => {
