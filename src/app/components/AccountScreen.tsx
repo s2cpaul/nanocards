@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { GlobalHeader } from "./GlobalHeader";
 import { supabase, API_BASE_URL, getAuthHeaders } from "../../lib/supabase";
-import { User, Mail, Calendar, Heart, FileText, LogOut, Loader2 } from "lucide-react";
+import { User, Mail, Calendar, Heart, FileText, LogOut, Loader2, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 
@@ -12,6 +12,7 @@ export function AccountScreen() {
   const [userEmail, setUserEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [createdAt, setCreatedAt] = useState("");
+  const [subscriptionTier, setSubscriptionTier] = useState("free");
   const [stats, setStats] = useState({
     cardsCreated: 0,
     totalLikes: 0,
@@ -54,13 +55,15 @@ export function AccountScreen() {
   const loadUserProfile = async (email: string) => {
     try {
       const headers = await getAuthHeaders();
-      const response = await fetch(`${API_BASE_URL}/profile`, {
+      // Use /user/profile endpoint to get subscription tier and display name
+      const response = await fetch(`${API_BASE_URL}/user/profile`, {
         headers,
       });
 
       if (response.ok) {
         const data = await response.json();
         setDisplayName(data.displayName || email.split("@")[0]);
+        setSubscriptionTier(data.subscriptionTier || "free");
       }
     } catch (error) {
       console.error("Error loading profile:", error);
@@ -125,6 +128,14 @@ export function AccountScreen() {
               <User className="w-12 h-12 text-white" strokeWidth={2} />
             </div>
             <h2 className="text-xl font-bold text-gray-900">{displayName}</h2>
+            
+            {/* Subscription Tier Badge */}
+            <div className="flex items-center gap-2 mt-3 px-3 py-1.5 bg-blue-50 rounded-full border border-blue-200">
+              <Crown className="w-4 h-4 text-blue-600" strokeWidth={2} />
+              <span className="text-sm font-semibold text-blue-700 capitalize">
+                {subscriptionTier === "enterprise" ? "Owner (Enterprise)" : `${subscriptionTier} Tier`}
+              </span>
+            </div>
           </div>
 
           {/* Account Info */}
