@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { Search, TrendingUp } from "lucide-react";
+import { Search, TrendingUp, Plus } from "lucide-react";
 import { UniversalCard } from "./UniversalCard";
 import { GlobalHeader } from "./GlobalHeader";
 import { NanoCard } from "../types";
@@ -220,6 +220,17 @@ export function TopCardsScreen() {
             className="pl-10 h-9 rounded-lg border-gray-300 bg-white"
           />
         </div>
+
+        {/* Create Card Button */}
+        {!isGuestMode && (
+          <button
+            onClick={() => navigate('/edit-card')}
+            className="w-full mb-4 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded-lg transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            Create New Card
+          </button>
+        )}
 
         {/* Featured by most popular pill */}
         <div className="flex items-center justify-center mb-4">
