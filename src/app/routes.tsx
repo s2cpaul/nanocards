@@ -5,6 +5,7 @@ import { lazy, Suspense } from "react";
 import { LandingPage } from "./components/LandingPage";
 import { LoginScreen } from "./components/LoginScreen";
 import { SignupScreen } from "./components/SignupScreen";
+import { DebugScreen } from "./components/DebugScreen";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { NotFound } from "./components/NotFound";
 import { MainApp } from "./components/MainApp";
@@ -71,6 +72,11 @@ export const router = createBrowserRouter([
   {
     path: "/signup",
     Component: SignupScreen,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/debug",
+    Component: DebugScreen,
     errorElement: <ErrorBoundary />,
   },
   {

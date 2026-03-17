@@ -1624,6 +1624,23 @@ app.post("/make-server-d91f8206/auth/signup", async (c) => {
       // as the user can be recovered
     }
 
+    // Store initial subscription info in KV store for card limit checking
+    const newSubscription = {
+      tier: "free",
+      status: "active",
+      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year
+      createdAt: new Date().toISOString(),
+    };
+    await kv.set(`user:${data.user.id}:subscription`, newSubscription);
+    
+    // Initialize card count to 0
+    await kv.set(`user:${data.user.id}:cardCount`, 0);
+    
+    // Initialize points to 0
+    await kv.set(`user:${data.user.id}:points`, 0);
+
+    console.log(`[POST /auth/signup] Subscription and profile initialized for ${email}`);
+
     return c.json({
       user: {
         id: data.user.id,

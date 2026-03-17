@@ -78,50 +78,72 @@ export function TopCardsScreen() {
   const loadCards = async () => {
     setIsLoading(true);
     try {
-      const headers = await getAuthHeaders();
-      const response = await fetch(`${API_BASE_URL}/cards`, { headers });
+      // Create featured card #001 - ALWAYS VIEWABLE BY ALL (no auth required)
+      // This is the primary introduction card for nAnoCards
+      const featuredCard: any = {
+        id: 'featured-001',
+        title: 'nAnoCards Overview',
+        videoUrl: 'https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
+        videoTime: '2:30',
+        likes: 1000,
+        createdBy: 'nAnoCards',
+        createdAt: new Date(0).toISOString(), // Very old date so it sorts to top
+        information: 'Watch this quick demo to learn how to create and share your nano learning cards with the world.',
+        insights: {},
+        globalCardNumber: '001',
+        isPublic: true, // Explicitly public - viewable by all
+        visibility: 'public', // Public visibility
+      };
 
-      if (response.ok) {
-        const data = await response.json();
-        let cardsArray = data.cards || [];
+      let cardsArray = [featuredCard]; // START with featured card - ALWAYS shown
 
-        // Create featured card as default top card
-        const featuredCard: any = {
-          id: 'featured-001',
-          title: 'nAnoCards Overview',
-          videoUrl: 'https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
-          videoTime: '2:30',
-          likes: 1000,
-          createdBy: 'nAnoCards',
-          createdAt: new Date(0).toISOString(), // Very old date so it sorts to top
-          information: 'Watch this quick demo to learn how to create and share your nano learning cards with the world.',
-          insights: {},
-          globalCardNumber: '001',
-        };
+      try {
+        const headers = await getAuthHeaders();
+        const response = await fetch(`${API_BASE_URL}/cards`, { headers });
 
-        // Add featured card to beginning
-        cardsArray = [featuredCard, ...cardsArray];
-
-        // Sort by creation date (oldest first) to assign consistent card numbers
-        const sortedByCreation = cardsArray.sort((a: NanoCard, b: NanoCard) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-
-        // Assign global card numbers
-        const cardsWithNumbers = sortedByCreation.map((card: NanoCard, index: number) => ({
-          ...card,
-          globalCardNumber: String(index + 1).padStart(3, "0"),
-        }));
-
-        // Sort by likes for display
-        const sortedByLikes = cardsWithNumbers.sort((a: any, b: any) => b.likes - a.likes);
-        setCards(sortedByLikes);
-      } else {
-        setCards([]);
+        if (response.ok) {
+          const data = await response.json();
+          const apiCards = data.cards || [];
+          // Add any cards from the API after the featured card
+          cardsArray = [featuredCard, ...apiCards];
+        }
+      } catch (error) {
+        console.error("Error fetching cards from API:", error);
+        // Still show featured card even if API fails
       }
+
+      // Sort by creation date (oldest first) to assign consistent card numbers
+      const sortedByCreation = cardsArray.sort((a: NanoCard, b: NanoCard) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+
+      // Assign global card numbers
+      const cardsWithNumbers = sortedByCreation.map((card: NanoCard, index: number) => ({
+        ...card,
+        globalCardNumber: String(index + 1).padStart(3, "0"),
+      }));
+
+      // Sort by likes for display
+      const sortedByLikes = cardsWithNumbers.sort((a: any, b: any) => b.likes - a.likes);
+      setCards(sortedByLikes);
     } catch (error) {
       console.error("Error loading cards:", error);
-      setCards([]);
+      // FALLBACK: Show at least the featured card
+      const featuredCard: any = {
+        id: 'featured-001',
+        title: 'nAnoCards Overview',
+        videoUrl: 'https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
+        videoTime: '2:30',
+        likes: 1000,
+        createdBy: 'nAnoCards',
+        createdAt: new Date(0).toISOString(),
+        information: 'Watch this quick demo to learn how to create and share your nano learning cards with the world.',
+        insights: {},
+        globalCardNumber: '001',
+        isPublic: true,
+        visibility: 'public',
+      };
+      setCards([featuredCard]);
     } finally {
       setIsLoading(false);
     }

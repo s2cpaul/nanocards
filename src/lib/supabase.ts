@@ -1,9 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-// Import from the utils directory (outside src) using absolute path
-// @ts-ignore - This file is auto-generated outside the src directory
-import { projectId, publicAnonKey } from '/utils/supabase/info';
+// Get Supabase credentials from environment variables
+const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+const publicAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// Validate that credentials are available
+if (!projectId || !publicAnonKey) {
+  console.error('[Supabase] Missing credentials:', {
+    projectId: projectId ? '✓' : '✗ Missing VITE_SUPABASE_PROJECT_ID',
+    publicAnonKey: publicAnonKey ? '✓' : '✗ Missing VITE_SUPABASE_ANON_KEY',
+  });
+}
 
 const supabaseUrl = `https://${projectId}.supabase.co`;
 
@@ -17,6 +25,11 @@ function getSupabaseClient(): SupabaseClient {
   }
 
   try {
+    // Validate credentials before creating client
+    if (!projectId || !publicAnonKey) {
+      throw new Error(`Missing Supabase credentials. projectId: ${projectId ? 'set' : 'MISSING'}, publicAnonKey: ${publicAnonKey ? 'set' : 'MISSING'}`);
+    }
+
     // Check if we're in a browser environment
     if (typeof window !== 'undefined' && window.localStorage) {
       _supabase = createClient(supabaseUrl, publicAnonKey, {
@@ -37,6 +50,7 @@ function getSupabaseClient(): SupabaseClient {
       });
     }
     
+    console.log('[Supabase] Client initialized successfully');
     return _supabase;
   } catch (error) {
     console.error('[Supabase] Failed to initialize client:', error);

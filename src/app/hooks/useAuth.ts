@@ -26,7 +26,16 @@ export function useAuth() {
         return;
       }
 
-      // Check for guest mode
+      // Check actual auth session FIRST (before guest mode)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.email) {
+        setCurrentUserEmail(session.user.email);
+        setIsGuestMode(false);
+        setLoading(false);
+        return;
+      }
+
+      // Check for guest mode ONLY if no valid session
       const guestMode = localStorage.getItem('guestMode') === 'true';
       if (guestMode) {
         setIsGuestMode(true);
@@ -34,15 +43,10 @@ export function useAuth() {
         return;
       }
 
-      // Check actual auth session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email) {
-        setCurrentUserEmail(session.user.email);
-        setIsGuestMode(false);
-      }
+      // No session and no guest mode
+      setLoading(false);
     } catch (error) {
       console.error('Auth check error:', error);
-    } finally {
       setLoading(false);
     }
   };

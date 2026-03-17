@@ -265,12 +265,15 @@ export function MainApp() {
   // Filter cards
   const filteredCards = cards
     .filter((card: any) => {
+      // Card #001 is always visible to everyone
       const isCard001 = card.globalCardNumber === '001';
       const matchesSearch = card.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         card.id.includes(searchQuery) ||
         card.createdBy.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesView = cardView === "all" || card.createdBy === currentUserEmail;
-      return isCard001 && matchesSearch && matchesView;
+      
+      // Show card #001 always, or show other cards if they match search and view
+      return isCard001 || (matchesSearch && matchesView);
     })
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 

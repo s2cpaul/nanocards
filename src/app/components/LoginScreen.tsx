@@ -12,9 +12,17 @@ export function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    // Check for existing session - fast redirect if already logged in
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) navigate("/app");
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email) {
+          console.log('[LoginScreen] Existing session found, redirecting to app');
+          navigate("/app", { replace: true });
+        }
+      } catch (error) {
+        console.error('[LoginScreen] Error checking session:', error);
+      }
     };
     checkSession();
   }, [navigate]);
@@ -28,20 +36,42 @@ export function LoginScreen() {
 
     setIsLoading(true);
     try {
+      console.log('[LoginScreen] Attempting login for:', email);
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
       if (error) {
         console.error("Login error:", error);
-        toast.error(error.message);
+        // Provide more specific error messages
+        const errorMessage = error.message?.includes('Invalid login credentials') 
+          ? "Invalid email or password"
+          : error.message?.includes('Email not confirmed')
+          ? "Please confirm your email first"
+          : error.message?.includes('fetch')
+          ? "Network error - please check your connection"
+          : error.message || "Failed to login";
+        toast.error(errorMessage);
         setIsLoading(false);
         return;
       }
+      
       if (data.session) {
-        toast.success("Logged in successfully");
-        navigate("/app");
+        console.log('[LoginScreen] Login successful, clearing guest mode');
+        // Clear guest mode flag when successfully logging in
+        localStorage.removeItem('guestMode');
+        localStorage.removeItem('guestVisits');
+        toast.success("Welcome back!");
+        // Use replace: true to prevent back button going to login
+        navigate("/app", { replace: true });
+      } else {
+        toast.error("Login failed - no session created");
+        setIsLoading(false);
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      toast.error(error?.message || "Failed to login");
+      const errorMessage = error?.message?.includes('fetch')
+        ? "Network error - please check your internet connection"
+        : error?.message || "Failed to login";
+      toast.error(errorMessage);
       setIsLoading(false);
     }
   };

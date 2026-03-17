@@ -31,6 +31,7 @@ export function SignupScreen() {
 
     setIsLoading(true);
     try {
+      console.log('[SignupScreen] Creating account for:', email);
       const response = await fetch(`${API_BASE_URL}/make-server-d91f8206/auth/signup`, {
         method: "POST",
         headers: {
@@ -53,8 +54,36 @@ export function SignupScreen() {
       }
 
       if (data.user) {
-        toast.success("Account created successfully");
-        navigate("/app");
+        console.log('[SignupScreen] Account created, auto-logging in');
+        
+        // Auto-login the user immediately after signup
+        try {
+          const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (loginError) {
+            console.error('[SignupScreen] Auto-login failed:', loginError);
+            // Even if auto-login fails, account is created, let user go to app
+            toast.success("Account created! Please log in with your credentials");
+            navigate("/login", { replace: true });
+            return;
+          }
+
+          if (loginData.session) {
+            console.log('[SignupScreen] Auto-login successful');
+            // Clear guest mode flag
+            localStorage.removeItem('guestMode');
+            localStorage.removeItem('guestVisits');
+            toast.success("Account created and logged in!");
+            navigate("/app", { replace: true });
+          }
+        } catch (autoLoginError) {
+          console.error('[SignupScreen] Auto-login error:', autoLoginError);
+          toast.success("Account created! Redirecting to login...");
+          navigate("/login", { replace: true });
+        }
       }
     } catch (error: any) {
       console.error("Signup error:", error);
