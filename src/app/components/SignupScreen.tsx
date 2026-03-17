@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "./ui/button";
-import { supabase, API_BASE_URL, getCurrentSession } from "../../lib/supabase";
+import { supabase, getCurrentSession } from "../../lib/supabase";
 import { toast } from "sonner";
 import { Mail, Lock, User, Loader2, ArrowLeft } from "lucide-react";
 
@@ -32,30 +32,29 @@ export function SignupScreen() {
     setIsLoading(true);
     try {
       console.log('[SignupScreen] Creating account for:', email);
-      const response = await fetch(`${API_BASE_URL}/make-server-d91f8206/auth/signup`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      
+      // URGENT FIX: Use Supabase Auth directly instead of API endpoint
+      // The API endpoint doesn't exist yet, so we bypass it
+      const { data: signupData, error: signupError } = await supabase.auth.signUp({
+        email: email.toLowerCase().trim(),
+        password,
+        options: {
+          data: {
+            display_name: displayName || email.split("@")[0],
+          },
+          emailRedirectTo: undefined, // Auto-confirm, no email needed
         },
-        body: JSON.stringify({
-          email: email.toLowerCase().trim(),
-          password,
-          displayName: displayName || email.split("@")[0],
-        }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        console.error("[SignupScreen] Signup error:", data);
+      if (signupError) {
+        console.error("[SignupScreen] Signup error:", signupError.message);
         
         // Map error messages to user-friendly ones
-        let errorMessage = data.error || "Failed to create account";
+        let errorMessage = signupError.message || "Failed to create account";
         
-        // If account already exists, redirect to login
-        if (data.error?.toLowerCase().includes('already exists') || 
-            data.error?.toLowerCase().includes('user already registered') ||
-            (response.status === 400 && data.error?.toLowerCase().includes('exist'))) {
+        // If account already exists
+        if (errorMessage.toLowerCase().includes('already registered') || 
+            errorMessage.toLowerCase().includes('user already exists')) {
           console.log('[SignupScreen] Account already exists, redirecting to login');
           toast.success("Account already exists. Redirecting to login...");
           setTimeout(() => navigate("/login", { replace: true }), 1000);
@@ -63,19 +62,12 @@ export function SignupScreen() {
           return;
         }
         
-        // Don't show internal errors to users
-        if (errorMessage.toLowerCase().includes('api') || 
-            errorMessage.toLowerCase().includes('network')) {
-          console.error('[SignupScreen] API/Network error:', errorMessage);
-          errorMessage = "Signup temporarily unavailable. Please try again in a moment.";
-        }
-        
         toast.error(errorMessage);
         setIsLoading(false);
         return;
       }
 
-      if (data.user) {
+      if (signupData.user) {
         console.log('[SignupScreen] Account created successfully, attempting auto-login');
         
         // Auto-login the user immediately after signup
@@ -87,22 +79,7 @@ export function SignupScreen() {
 
           if (loginError) {
             console.error('[SignupScreen] Auto-login failed:', loginError);
-            
-            // Map error messages
-            let errorMsg = "Account created, but auto-login failed";
-            
-            if (loginError.message?.includes('NetworkError') || 
-                loginError.message?.includes('Failed to fetch')) {
-              console.error('[SignupScreen] Network error during auto-login');
-              errorMsg = "Account created! Please log in manually with your credentials.";
-            } else if (loginError.message?.toLowerCase().includes('invalid')) {
-              errorMsg = "Account created! Please log in manually with your credentials.";
-            } else {
-              console.error('[SignupScreen] Unmapped auto-login error:', loginError.message);
-              errorMsg = "Account created! Please log in manually with your credentials.";
-            }
-            
-            toast.error(errorMsg);
+            toast.error("Account created! Please log in manually with your credentials.");
             setTimeout(() => navigate("/login", { replace: true }), 1000);
             return;
           }
@@ -123,7 +100,6 @@ export function SignupScreen() {
           }
         } catch (autoLoginError: any) {
           console.error('[SignupScreen] Unexpected auto-login error:', autoLoginError);
-          
           toast.error("Account created! Please log in manually with your credentials.");
           setTimeout(() => navigate("/login", { replace: true }), 1000);
         }
@@ -134,17 +110,7 @@ export function SignupScreen() {
       }
     } catch (error: any) {
       console.error("[SignupScreen] Unexpected error:", error);
-      
-      let errorMsg = "Failed to create account";
-      
-      if (error?.message?.includes('NetworkError') || 
-          error?.message?.includes('Failed to fetch')) {
-        errorMsg = "Network error. Please check your internet and try again.";
-      } else if (error?.message?.includes('offline')) {
-        errorMsg = "You appear to be offline. Please check your internet connection.";
-      }
-      
-      toast.error(errorMsg);
+      toast.error(error.message || "Failed to create account");
       setIsLoading(false);
     }
   };
