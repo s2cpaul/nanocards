@@ -43,7 +43,7 @@ export function LandingPage() {
             onClick={() => navigate("/app")}
             className="px-8 py-3 rounded-full text-sm font-semibold text-gray-600 hover:text-gray-900 transition-all"
           >
-            Main App
+            Cards
           </button>
         </div>
       </div>
