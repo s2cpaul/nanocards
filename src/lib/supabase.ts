@@ -1,9 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { supabaseConfig } from '../config/supabase.config';
 
 // Get Supabase credentials from environment variables
-const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-const publicAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Fallback to embedded config if env vars not available (for Vercel production builds)
+const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || supabaseConfig.projectId;
+const publicAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || supabaseConfig.anonKey;
 
 // Validate that credentials are available
 if (!projectId || !publicAnonKey) {
@@ -17,6 +19,7 @@ if (!projectId || !publicAnonKey) {
     console.error('[Supabase] Invalid API key format - does not appear to be a valid JWT');
   }
   console.log('[Supabase] Credentials loaded:', {
+    source: (import.meta.env.VITE_SUPABASE_PROJECT_ID ? 'env vars' : 'embedded config'),
     projectId: projectId ? '✓' : '✗',
     publicAnonKeyLength: publicAnonKey?.length || 0,
     publicAnonKeyValid: publicAnonKey?.startsWith('eyJ') ? '✓' : '✗',
