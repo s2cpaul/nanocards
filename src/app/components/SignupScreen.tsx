@@ -48,7 +48,27 @@ export function SignupScreen() {
 
       if (!response.ok) {
         console.error("Signup error:", data);
-        toast.error(data.error || "Failed to create account");
+        
+        // Handle specific error cases
+        let errorMessage = data.error || "Failed to create account";
+        
+        // If account already exists, redirect to login
+        if (data.error?.includes('already exists') || 
+            data.error?.includes('User already registered') ||
+            response.status === 400 && data.error?.toLowerCase().includes('exist')) {
+          errorMessage = "Account already exists. Redirecting to login...";
+          toast.success(errorMessage);
+          setTimeout(() => navigate("/login", { replace: true }), 1000);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Filter out internal API errors
+        if (errorMessage.includes('failed') && errorMessage.toLowerCase().includes('api')) {
+          errorMessage = "Authentication service temporarily unavailable. Please try again in a moment.";
+        }
+        
+        toast.error(errorMessage);
         setIsLoading(false);
         return;
       }
@@ -65,7 +85,14 @@ export function SignupScreen() {
 
           if (loginError) {
             console.error('[SignupScreen] Auto-login failed:', loginError);
-            // Even if auto-login fails, account is created, let user go to app
+            
+            // Filter out internal API errors
+            let errorMsg = loginError.message || "Auto-login failed";
+            if (errorMsg.includes('failed') && errorMsg.toLowerCase().includes('api')) {
+              errorMsg = "Authentication service temporarily unavailable. Please log in manually.";
+            }
+            
+            toast.error(errorMsg);
             toast.success("Account created! Please log in with your credentials");
             navigate("/login", { replace: true });
             return;
@@ -79,15 +106,30 @@ export function SignupScreen() {
             toast.success("Account created and logged in!");
             navigate("/app", { replace: true });
           }
-        } catch (autoLoginError) {
+        } catch (autoLoginError: any) {
           console.error('[SignupScreen] Auto-login error:', autoLoginError);
+          
+          // Filter out internal API errors
+          let errorMsg = autoLoginError?.message || "Auto-login failed";
+          if (errorMsg.includes('failed') && errorMsg.toLowerCase().includes('api')) {
+            errorMsg = "Authentication service temporarily unavailable. Please log in manually.";
+          }
+          
+          toast.error(errorMsg);
           toast.success("Account created! Redirecting to login...");
           navigate("/login", { replace: true });
         }
       }
     } catch (error: any) {
       console.error("Signup error:", error);
-      toast.error(error?.message || "Failed to create account");
+      
+      // Filter out internal API errors
+      let errorMsg = error?.message || "Failed to create account";
+      if (errorMsg.includes('failed') && errorMsg.toLowerCase().includes('api')) {
+        errorMsg = "Authentication service temporarily unavailable. Please try again in a moment.";
+      }
+      
+      toast.error(errorMsg);
       setIsLoading(false);
     }
   };

@@ -11,6 +11,16 @@ if (!projectId || !publicAnonKey) {
     projectId: projectId ? '✓' : '✗ Missing VITE_SUPABASE_PROJECT_ID',
     publicAnonKey: publicAnonKey ? '✓' : '✗ Missing VITE_SUPABASE_ANON_KEY',
   });
+} else {
+  // Validate API key format (should be a JWT)
+  if (!publicAnonKey.startsWith('eyJ')) {
+    console.error('[Supabase] Invalid API key format - does not appear to be a valid JWT');
+  }
+  console.log('[Supabase] Credentials loaded:', {
+    projectId: projectId ? '✓' : '✗',
+    publicAnonKeyLength: publicAnonKey?.length || 0,
+    publicAnonKeyValid: publicAnonKey?.startsWith('eyJ') ? '✓' : '✗',
+  });
 }
 
 const supabaseUrl = `https://${projectId}.supabase.co`;
@@ -50,7 +60,7 @@ function getSupabaseClient(): SupabaseClient {
       });
     }
     
-    console.log('[Supabase] Client initialized successfully');
+    console.log('[Supabase] Client initialized successfully with URL:', supabaseUrl);
     return _supabase;
   } catch (error) {
     console.error('[Supabase] Failed to initialize client:', error);
