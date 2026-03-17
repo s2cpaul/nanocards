@@ -18,6 +18,7 @@ import { API_BASE_URL, getAuthHeaders, supabase } from "../../lib/supabase";
 import { STAGES } from "../constants/stages";
 import { HamburgerMenu } from "./HamburgerMenu";
 
+// Create a new nAnoCard with video, objectives, and metadata
 export function CreateCard() {
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
