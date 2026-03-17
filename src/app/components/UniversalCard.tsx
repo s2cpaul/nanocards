@@ -206,18 +206,16 @@ export function UniversalCard({
           <span className="text-gray-900 font-bold text-lg">{likes}</span>
         </button>
 
-        {/* Card number + edit */}
+        {/* Card number + edit pencil (ALWAYS VISIBLE) */}
         <div className="flex flex-col items-center gap-0.5">
           <span className="text-gray-600 font-semibold text-base">#{cardNumber}</span>
-          {onEdit && (
-            <button
-              onClick={onEdit}
-              className="p-0.5 rounded hover:bg-gray-100 transition-colors"
-              title="Edit"
-            >
-              <Edit3 className="w-4 h-4 text-gray-500" strokeWidth={1.5} />
-            </button>
-          )}
+          <button
+            onClick={onEdit || (() => toast.error('You must be logged in to edit cards'))}
+            className="p-0.5 rounded hover:bg-gray-100 transition-colors"
+            title="Edit Card"
+          >
+            <Edit3 className="w-4 h-4 text-gray-400" strokeWidth={1.5} />
+          </button>
         </div>
       </div>
     </div>
