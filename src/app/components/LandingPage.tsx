@@ -103,8 +103,8 @@ export function LandingPage() {
                 
                 {/* Subtitle */}
                 <p className="text-base text-gray-300 text-center mb-10 leading-relaxed">
-                  Mobile-first AI product cards for<br />
-                  innovators & entrepreneurs!
+                  Mobile-first learning<br />
+                  with AI product cards!
                 </p>
 
                 {/* Look Around Button - WHITE background with BLUE text */}
