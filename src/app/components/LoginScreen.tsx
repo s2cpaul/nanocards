@@ -78,9 +78,10 @@ export function LoginScreen() {
         } else if (error.message?.includes('Too many attempts')) {
           errorMessage = "Too many login attempts. Please try again later.";
         } else {
-          // Generic fallback - don't expose internal errors
+          // NEVER show "temporarily unavailable" - always be specific
+          // If we can't map the error, log it and show a helpful message
           console.error('[LoginScreen] Unmapped error:', error.message);
-          errorMessage = "Login temporarily unavailable. Please try again in a moment.";
+          errorMessage = `Login error: ${error.message || 'Unable to process login'}. Please try again or contact support.`;
         }
         
         toast.error(errorMessage);
