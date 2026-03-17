@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nanocards-v8';
+const CACHE_NAME = 'nanocards-v9';
 const OFFLINE_URL = '/offline.html';
 
 self.addEventListener('install', (event) => {

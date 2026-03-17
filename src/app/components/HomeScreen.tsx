@@ -92,12 +92,8 @@ export function HomeScreen() {
               Pricing
             </button>
             <button
-              onClick={() => setActiveView("app")}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                activeView === "app"
-                  ? "bg-blue-900 text-white"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
+              onClick={() => navigate('/app/top-cards')}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all text-gray-600 hover:text-gray-900`}
             >
               Cards
             </button>
