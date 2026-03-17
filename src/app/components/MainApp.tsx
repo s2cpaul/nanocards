@@ -348,6 +348,12 @@ export function MainApp() {
           ) : (
             filteredCards.map((card: any) => {
               const isOwner = !isGuestMode && (currentUserEmail === "carapaulson1@gmail.com" || card.createdBy === currentUserEmail);
+              
+              // DEBUG: Log edit permissions
+              if (card.id !== 'featured-001') {
+                console.log(`MainApp - Card ${card.id}: createdBy="${card.createdBy}", userEmail="${currentUserEmail}", isOwner=${isOwner}`);
+              }
+              
               return (
                 <UniversalCard
                   key={card.id}

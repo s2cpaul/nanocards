@@ -86,7 +86,7 @@ export function TopCardsScreen() {
         videoUrl: 'https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
         videoTime: '2:30',
         likes: 1000,
-        createdBy: 'nAnoCards',
+        createdBy: 'carapaulson1@gmail.com', // Created by Cara - so she can edit it
         createdAt: new Date(0).toISOString(), // Very old date so it sorts to top
         information: 'Watch this quick demo to learn how to create and share your nano learning cards with the world.',
         insights: {},
@@ -135,7 +135,7 @@ export function TopCardsScreen() {
         videoUrl: 'https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
         videoTime: '2:30',
         likes: 1000,
-        createdBy: 'nAnoCards',
+        createdBy: 'carapaulson1@gmail.com', // Created by Cara - so she can edit it
         createdAt: new Date(0).toISOString(),
         information: 'Watch this quick demo to learn how to create and share your nano learning cards with the world.',
         insights: {},
@@ -245,6 +245,11 @@ export function TopCardsScreen() {
               filteredCards.map((card: any) => {
                 const canEdit = !isGuestMode &&
                   (currentUserEmail === "carapaulson1@gmail.com" || card.createdBy === currentUserEmail);
+
+                // DEBUG: Log edit permissions
+                if (card.id !== 'featured-001') {
+                  console.log(`Card ${card.id}: createdBy="${card.createdBy}", userEmail="${currentUserEmail}", canEdit=${canEdit}`);
+                }
 
                 return (
                   <UniversalCard
