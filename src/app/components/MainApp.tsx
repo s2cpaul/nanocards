@@ -40,7 +40,7 @@ export function MainApp() {
       const featuredCard001: NanoCard = {
         id: 'nanocards-001',
         title: 'nAnoCards Overview',
-        videoUrl: 'https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
+        videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/nAnoCards-short.mp4',
         videoTime: '2:30',
         likes: 1000,
         createdBy: 'carapaulson1@gmail.com',
@@ -96,7 +96,7 @@ export function MainApp() {
       const fallbackCard: NanoCard = {
         id: 'nanocards-001',
         title: 'nAnoCards Overview',
-        videoUrl: 'https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
+        videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/nAnoCards-short.mp4',
         videoTime: '2:30',
         likes: 1000,
         createdBy: 'carapaulson1@gmail.com',
