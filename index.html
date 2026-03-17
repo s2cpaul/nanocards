@@ -9,7 +9,7 @@
     <meta http-equiv="Expires" content="0" />
     
     <!-- Mobile-First PWA Meta Tags -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -24,6 +24,18 @@
     <meta name="theme-color" content="#1e3a8a" />
     <meta name="msapplication-TileColor" content="#1e3a8a" />
     <meta name="msapplication-navbutton-color" content="#1e3a8a" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- Fallback for browsers that do not support theme-color -->
+    <style>
+      body {
+        background-color: #1e3a8a;
+      }
+      @media (prefers-color-scheme: light) {
+        body {
+          background-color: #ffffff;
+        }
+      }
+    </style>
     
     <!-- Cache Busting - forces reload on every update -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -33,10 +45,10 @@
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
     
-    <!-- Icons - Temporarily disabled, add later -->
-    <!-- <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" /> -->
-    <!-- <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" /> -->
-    <!-- <link rel="apple-touch-icon" href="/icon-192.png" /> -->
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
     
     <!-- Preconnect for Performance (Edge optimization) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

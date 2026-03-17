@@ -275,6 +275,7 @@ export function EditCardScreen() {
               Visibility
             </label>
             <select
+              aria-label="Card Visibility"
               value={formData.visibility || "public"}
               onChange={(e) =>
                 setFormData({
