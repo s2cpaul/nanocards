@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "./ui/button";
-import { supabase } from "../../lib/supabase";
+import { supabase, API_BASE_URL } from "../../lib/supabase";
 import { toast } from "sonner";
 import { Mail, Lock, User, Loader2, ArrowLeft } from "lucide-react";
 
@@ -31,19 +31,23 @@ export function SignupScreen() {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            display_name: displayName || email.split("@")[0],
-          },
+      const response = await fetch(`${API_BASE_URL}/make-server-d91f8206/auth/signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          email,
+          password,
+          displayName: displayName || email.split("@")[0],
+        }),
       });
 
-      if (error) {
-        console.error("Signup error:", error);
-        toast.error(error.message);
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Signup error:", data);
+        toast.error(data.error || "Failed to create account");
         setIsLoading(false);
         return;
       }

@@ -1569,6 +1569,75 @@ function generateOrgId(email: string): string {
   return orgId;
 }
 
+// Auth endpoint for user signup
+app.post("/make-server-d91f8206/auth/signup", async (c) => {
+  try {
+    const { email, password, displayName } = await c.req.json();
+
+    // Validate input
+    if (!email || !password) {
+      return c.json({ error: "Email and password are required" }, 400);
+    }
+
+    if (password.length < 6) {
+      return c.json({ error: "Password must be at least 6 characters" }, 400);
+    }
+
+    console.log(`[POST /auth/signup] Creating account for ${email}`);
+
+    // Create user with Supabase Auth
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      user_metadata: {
+        display_name: displayName || email.split("@")[0],
+      },
+      email_confirm: true, // Auto-confirm email
+    });
+
+    if (error) {
+      console.error("[POST /auth/signup] Error creating user:", error);
+      return c.json({ error: error.message }, 400);
+    }
+
+    if (!data.user) {
+      return c.json({ error: "Failed to create user" }, 500);
+    }
+
+    console.log(`[POST /auth/signup] Account created successfully for ${email}`);
+
+    // Create user profile in public.users table
+    const { error: profileError } = await supabase
+      .from("users")
+      .insert({
+        id: data.user.id,
+        email: data.user.email,
+        display_name: displayName || email.split("@")[0],
+        subscription_tier: "free",
+        points: 0,
+        created_at: new Date().toISOString(),
+      });
+
+    if (profileError) {
+      console.error("[POST /auth/signup] Error creating user profile:", profileError);
+      // User created but profile creation failed - still return success
+      // as the user can be recovered
+    }
+
+    return c.json({
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+        display_name: displayName || email.split("@")[0],
+      },
+      message: "Account created successfully",
+    });
+  } catch (error: any) {
+    console.error("[POST /auth/signup] Error:", error);
+    return c.json({ error: error?.message || "Failed to create account" }, 500);
+  }
+});
+
 // Admin endpoint to create user account with secure random password
 app.post("/make-server-d91f8206/admin/create-account", async (c) => {
   try {
