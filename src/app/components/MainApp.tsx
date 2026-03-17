@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { NanoCard } from "../types";
 import { UniversalCard } from "./UniversalCard";
 import { GlobalHeader } from "./GlobalHeader";
-import { supabase, API_BASE_URL, getAuthHeaders } from "../../lib/supabase";
+import { supabase, API_BASE_URL, getAuthHeaders, getCurrentSession, initializeAuth } from "../../lib/supabase";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { WelcomeModal } from "./WelcomeModal";
@@ -115,62 +115,98 @@ export function MainApp() {
     let hasProcessedAuth = false;
 
     const initAuth = async () => {
-      const isOAuthCallback = window.location.hash &&
-        (window.location.hash.includes('access_token') || window.location.hash.includes('error'));
+      try {
+        console.log('[MainApp] Starting authentication initialization...');
+        
+        // Check for OAuth callback
+        const isOAuthCallback = window.location.hash &&
+          (window.location.hash.includes('access_token') || window.location.hash.includes('error'));
 
-      if (isOAuthCallback) {
-        setLoading(true);
-        localStorage.removeItem('oauthInProgress');
-        return;
-      }
+        if (isOAuthCallback) {
+          console.log('[MainApp] OAuth callback detected, waiting for session...');
+          setLoading(true);
+          localStorage.removeItem('oauthInProgress');
+          // Let the auth state listener handle it
+          return;
+        }
 
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) console.error('Session error:', error);
-      if (!isMounted) return;
+        // Try to restore existing session
+        const session = await getCurrentSession();
+        
+        if (!isMounted) return;
 
-      if (session) {
-        const userEmail = session.user.email || "";
-        setCurrentUserEmail(userEmail);
-        setIsAdmin(userEmail === "carapaulson1@gmail.com");
-        setIsGuestMode(false);
-        hasProcessedAuth = true;
-        localStorage.removeItem('oauthInProgress');
-        loadCards();
-        loadLikedCards();
-        loadUserProfile();
-      } else {
+        if (session?.user?.email) {
+          console.log('[MainApp] Session restored for:', session.user.email);
+          const userEmail = session.user.email;
+          setCurrentUserEmail(userEmail);
+          setIsAdmin(userEmail === "carapaulson1@gmail.com");
+          setIsGuestMode(false);
+          hasProcessedAuth = true;
+          localStorage.removeItem('oauthInProgress');
+          
+          // Load user data
+          await Promise.all([
+            loadCards(),
+            loadLikedCards(),
+            loadUserProfile()
+          ]);
+        } else {
+          console.log('[MainApp] No existing session, using guest mode');
+          setIsGuestMode(true);
+          await loadCards();
+        }
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('[MainApp] Error during auth initialization:', error);
         setIsGuestMode(true);
-        loadCards();
+        setLoading(false);
       }
     };
 
+    // Set up auth state listener for future changes (login/logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!isMounted) return;
+
+        console.log('[MainApp] Auth state change:', event, session?.user?.email);
 
         if (event === 'SIGNED_IN' && session && !hasProcessedAuth) {
           hasProcessedAuth = true;
           localStorage.removeItem('oauthInProgress');
           const userEmail = session.user.email || "";
+          console.log('[MainApp] User signed in:', userEmail);
+          
           setCurrentUserEmail(userEmail);
           setIsAdmin(userEmail === "carapaulson1@gmail.com");
           setIsGuestMode(false);
           setLoading(false);
-          loadCards();
-          loadLikedCards();
-          loadUserProfile();
+          
+          await Promise.all([
+            loadCards(),
+            loadLikedCards(),
+            loadUserProfile()
+          ]);
+          
+          // Clean up OAuth hash
           if (window.location.hash) {
             window.history.replaceState(null, '', window.location.pathname);
           }
         } else if (event === 'SIGNED_OUT') {
+          console.log('[MainApp] User signed out');
           localStorage.removeItem('oauthInProgress');
+          hasProcessedAuth = false;
           setIsGuestMode(true);
           setCurrentUserEmail('');
-          loadCards();
+          setDisplayName('');
+          setSubscriptionTier('free');
+          setUserPoints(0);
+          await loadCards();
         }
       }
     );
 
+    // Initialize auth on component mount
     initAuth();
 
     return () => {

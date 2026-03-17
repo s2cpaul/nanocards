@@ -74,9 +74,95 @@ function getSupabaseClient(): SupabaseClient {
 export const supabase = getSupabaseClient();
 export const API_BASE_URL = `${supabaseUrl}/functions/v1/make-server-d91f8206`;
 
+/**
+ * Initialize authentication state on app load
+ * This ensures sessions are properly restored and auth state is consistent
+ */
+export async function initializeAuth() {
+  try {
+    console.log('[Supabase] Initializing authentication...');
+    
+    // Get current session
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('[Supabase] Session restore error:', error);
+      return null;
+    }
+    
+    if (session) {
+      console.log('[Supabase] Existing session restored for:', session.user.email);
+      return session;
+    }
+    
+    console.log('[Supabase] No existing session found');
+    return null;
+  } catch (error) {
+    console.error('[Supabase] Error initializing auth:', error);
+    return null;
+  }
+}
+
+/**
+ * Validate and refresh session if needed
+ */
+export async function validateSession() {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('[Supabase] Session validation error:', error);
+      return null;
+    }
+    
+    if (session) {
+      // Check if token is about to expire (within 5 minutes)
+      const expiresIn = session.expires_at ? session.expires_at * 1000 - Date.now() : null;
+      if (expiresIn && expiresIn < 5 * 60 * 1000) {
+        console.log('[Supabase] Token expiring soon, refreshing...');
+        const { data: { session: refreshedSession }, error: refreshError } = 
+          await supabase.auth.refreshSession();
+        
+        if (refreshError) {
+          console.error('[Supabase] Token refresh failed:', refreshError);
+          return session;
+        }
+        
+        return refreshedSession;
+      }
+      
+      return session;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('[Supabase] Error validating session:', error);
+    return null;
+  }
+}
+
+/**
+ * Get current user session - primary method for checking auth state
+ */
+export async function getCurrentSession() {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('[Supabase] Error getting current session:', error);
+      return null;
+    }
+    
+    return session;
+  } catch (error) {
+    console.error('[Supabase] Unexpected error getting session:', error);
+    return null;
+  }
+}
+
 export async function getAuthHeaders() {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const session = await getCurrentSession();
     
     // Return headers with access_token if authenticated, otherwise use anon key
     return {
