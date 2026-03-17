@@ -354,10 +354,11 @@ export function CheckoutScreen() {
                     
                     {/* Full Name */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="checkout-fullName" className="block text-sm font-medium text-gray-700 mb-2">
                         Full Name
                       </label>
                       <input
+                        id="checkout-fullName"
                         type="text"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
@@ -369,10 +370,11 @@ export function CheckoutScreen() {
 
                     {/* Email */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="checkout-email" className="block text-sm font-medium text-gray-700 mb-2">
                         Email Address
                       </label>
                       <input
+                        id="checkout-email"
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -384,10 +386,11 @@ export function CheckoutScreen() {
 
                     {/* Password */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="checkout-password" className="block text-sm font-medium text-gray-700 mb-2">
                         Password
                       </label>
                       <input
+                        id="checkout-password"
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -399,10 +402,11 @@ export function CheckoutScreen() {
 
                     {/* Confirm Password */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="checkout-confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
                         Confirm Password
                       </label>
                       <input
+                        id="checkout-confirmPassword"
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
@@ -415,13 +419,14 @@ export function CheckoutScreen() {
                     {/* Age Verification */}
                     <div className="flex items-center gap-2">
                       <input
+                        id="checkout-ageVerify"
                         type="checkbox"
                         checked={ageVerified}
                         onChange={(e) => setAgeVerified(e.target.checked)}
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         required
                       />
-                      <label className="text-sm text-gray-700">
+                      <label htmlFor="checkout-ageVerify" className="text-sm text-gray-700">
                         I am 13 years of age or older
                       </label>
                     </div>

@@ -58,8 +58,9 @@ export function AdminCreateAccount() {
           
           <div className="space-y-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Account Type</label>
+              <label htmlFor="admin-accountType" className="block text-sm font-medium text-gray-700 mb-2">Account Type</label>
               <select
+                id="admin-accountType"
                 value={accountType}
                 onChange={(e) => setAccountType(e.target.value as 'individual' | 'organization')}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -70,8 +71,9 @@ export function AdminCreateAccount() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <label htmlFor="admin-email" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <input
+                id="admin-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -81,8 +83,9 @@ export function AdminCreateAccount() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+              <label htmlFor="admin-name" className="block text-sm font-medium text-gray-700 mb-2">Name</label>
               <input
+                id="admin-name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -93,8 +96,9 @@ export function AdminCreateAccount() {
 
             {accountType === 'organization' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Organization Name</label>
+                <label htmlFor="admin-orgName" className="block text-sm font-medium text-gray-700 mb-2">Organization Name</label>
                 <input
+                  id="admin-orgName"
                   type="text"
                   value={organizationName}
                   onChange={(e) => setOrganizationName(e.target.value)}

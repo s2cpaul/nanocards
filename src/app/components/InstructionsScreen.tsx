@@ -112,10 +112,11 @@ export function InstructionsScreen() {
                 <div className="space-y-4">
                   {/* Full Name */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="instructions-fullName" className="block text-sm font-medium text-gray-700 mb-1">
                       Full Name
                     </label>
                     <input
+                      id="instructions-fullName"
                       type="text"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
@@ -126,10 +127,11 @@ export function InstructionsScreen() {
 
                   {/* Email Address */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="instructions-email" className="block text-sm font-medium text-gray-700 mb-1">
                       Email Address
                     </label>
                     <input
+                      id="instructions-email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -140,10 +142,11 @@ export function InstructionsScreen() {
 
                   {/* Password */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="instructions-password" className="block text-sm font-medium text-gray-700 mb-1">
                       Password
                     </label>
                     <input
+                      id="instructions-password"
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -154,10 +157,11 @@ export function InstructionsScreen() {
 
                   {/* Confirm Password */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="instructions-confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                       Confirm Password
                     </label>
                     <input
+                      id="instructions-confirmPassword"
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
