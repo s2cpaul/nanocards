@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>nAnoCards Icon 192x192</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .container {
+      text-align: center;
+    }
+    .icon-canvas {
+      width: 192px;
+      height: 192px;
+      background: #1e3a8a;
+      border-radius: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin: 0 auto 20px;
+    }
+    .icon-svg {
+      width: 140px;
+      height: 140px;
+    }
+    .instructions {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+    }
+    .instructions h2 {
+      margin: 0 0 10px 0;
+      color: #1e3a8a;
+      font-size: 18px;
+    }
+    .instructions p {
+      margin: 8px 0;
+      color: #4b5563;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .instructions code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: #1e3a8a;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon-canvas">
+      <svg class="icon-svg" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Simple card/document icon with "nA" text -->
+        <rect x="25" y="20" width="90" height="100" rx="8" stroke="white" stroke-width="3" fill="none"/>
+        <line x1="40" y1="40" x2="100" y2="40" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <line x1="40" y1="55" x2="85" y2="55" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="40" y1="68" x2="95" y2="68" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        
+        <!-- "nA" text in simple line style -->
+        <text x="70" y="105" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" fill="white" text-anchor="middle">nA</text>
+      </svg>
+    </div>
+    <div class="instructions">
+      <h2>📸 Save as icon-192.png</h2>
+      <p><strong>Method 1 (Screenshot):</strong></p>
+      <p>1. Right-click the icon above<br>
+      2. "Save image as..." or screenshot it<br>
+      3. Crop to exactly 192x192 pixels<br>
+      4. Save as <code>icon-192.png</code></p>
+      
+      <p><strong>Method 2 (Browser DevTools):</strong></p>
+      <p>1. Right-click icon → Inspect<br>
+      2. Right-click the div.icon-canvas element<br>
+      3. "Capture node screenshot"<br>
+      4. Save as <code>icon-192.png</code></p>
+      
+      <p><strong>Method 3 (Online Tool):</strong></p>
+      <p>Use a screenshot tool or browser extension to capture the icon at exact dimensions.</p>
+    </div>
+  </div>
+</body>
+</html>
