@@ -311,7 +311,13 @@ export function MainApp() {
       // Show card #001 always, or show other cards if they match search and view
       return isCard001 || (matchesSearch && matchesView);
     })
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    .sort((a: any, b: any) => {
+      // Card #001 always appears first
+      if (a.globalCardNumber === '001') return -1;
+      if (b.globalCardNumber === '001') return 1;
+      // Then sort by newest first
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 
   if (loading) {
     return (

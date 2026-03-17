@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Home, Plus, BookOpen, Star, User, Play, Heart, X, Share2, Camera, Mail, Link as LinkIcon, Globe, Linkedin, MessageCircle, FileText, Youtube, Github } from "lucide-react";
+import { Home, Plus, BookOpen, Star, User, Play, Heart, Share2, Camera, Mail, Link as LinkIcon, Globe, Linkedin, MessageCircle, FileText, Youtube, Github } from "lucide-react";
 import { useNavigate } from "react-router";
 const cardImage = "";
 
@@ -9,21 +8,9 @@ interface DemoMainAppScreenProps {
 
 export function DemoMainAppScreen({ onTap }: DemoMainAppScreenProps) {
   const navigate = useNavigate();
-  const [showVideo, setShowVideo] = useState(false);
-
-  const handleFirstCardTap = () => {
-    setShowVideo(true);
-    if (onTap) {
-      onTap();
-    }
-  };
 
   const handleSecondCardTap = () => {
     navigate("/app?autoplay=true");
-  };
-
-  const handleCloseVideo = () => {
-    setShowVideo(false);
   };
 
   return (
@@ -31,35 +18,6 @@ export function DemoMainAppScreen({ onTap }: DemoMainAppScreenProps) {
       onClick={() => navigate("/top-cards")}
       className="w-full h-full bg-white relative overflow-hidden cursor-pointer"
     >
-      {/* Video Modal */}
-      {showVideo && (
-        <div className="absolute inset-0 bg-black z-50 flex flex-col">
-          <div className="flex items-center justify-between p-4">
-            <span className="text-white font-semibold">Sample Video</span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCloseVideo();
-              }}
-              className="text-white p-2 hover:bg-white/10 rounded-full"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-          <div className="flex-1 flex items-center justify-center">
-            <video
-              className="w-full h-full object-contain"
-              controls
-              autoPlay
-              src="https://naskxuojfdqcunotdjzi.supabase.co/storage/v1/object/public/DOL/DOL-Capstone.mp4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              Your browser does not support the video tag.
-            </video>
-          </div>
-        </div>
-      )}
-
       {/* Main App Content */}
       <div className="h-full flex flex-col">
         {/* Header */}
