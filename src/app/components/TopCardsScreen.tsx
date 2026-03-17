@@ -265,7 +265,7 @@ export function TopCardsScreen() {
                     informationText={card.information || card.insights?.information}
                     thumbnail={card.thumbnail || card.insights?.thumbnail}
                     qrCodeUrl={card.qrCodeUrl}
-                    onEdit={() => canEdit ? navigate(`/quick-edit?cardId=${card.id}`) : null}
+                    onEdit={() => canEdit ? navigate(`/edit-card?cardId=${card.id}`) : null}
                   />
                 );
               })

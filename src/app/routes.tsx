@@ -32,6 +32,7 @@ const DevelopersScreen = lazy(() => import("./components/DevelopersScreen").then
 const ApiKeyScreen = lazy(() => import("./components/ApiKeyScreen").then(m => ({ default: m.ApiKeyScreen })));
 const AboutPlatformScreen = lazy(() => import("./components/AboutPlatformScreen").then(m => ({ default: m.AboutPlatformScreen })));
 const TopCardsScreen = lazy(() => import("./components/TopCardsScreen").then(m => ({ default: m.TopCardsScreen })));
+const EditCardScreen = lazy(() => import("./components/EditCardScreen").then(m => ({ default: m.EditCardScreen })));
 const CardDetailView = lazy(() => import("./components/CardDetailView").then(m => ({ default: m.CardDetailView })));
 const TrainingDetailView = lazy(() => import("./components/TrainingDetailView").then(m => ({ default: m.TrainingDetailView })));
 const AdminCreateAccount = lazy(() => import("./pages/AdminCreateAccount").then(m => ({ default: m.AdminCreateAccount })));
@@ -97,6 +98,11 @@ export const router = createBrowserRouter([
   {
     path: "/top-cards",
     element: <LazyComponent component={TopCardsScreen} />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/edit-card",
+    element: <LazyComponent component={EditCardScreen} />,
     errorElement: <ErrorBoundary />,
   },
   {
