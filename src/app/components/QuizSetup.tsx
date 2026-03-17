@@ -253,7 +253,7 @@ export function QuizSetup() {
         {quizType === "multiple-choice" && (
           <div className="bg-white rounded-2xl p-6 shadow-sm mb-6">
             <div className="flex items-center justify-between mb-4">
-              <label className="block font-semibold text-gray-900">
+              <label id="answer-options-label" className="block font-semibold text-gray-900">
                 Answer Options
               </label>
               {answers.length < 6 && (
@@ -270,19 +270,23 @@ export function QuizSetup() {
               {answers.map((answer, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <input
+                    id={`answer-${index}`}
                     type="radio"
                     name="correctAnswer"
                     checked={answer.isCorrect}
                     onChange={() => handleCorrectAnswerChange(index)}
                     className="w-4 h-4 text-blue-600 flex-shrink-0"
                   />
-                  <Input
-                    value={answer.text}
-                    onChange={(e) => handleAnswerChange(index, e.target.value)}
-                    placeholder={`Option ${index + 1}`}
-                    className="flex-1"
-                    maxLength={128}
-                  />
+                  <label htmlFor={`answer-${index}`} className="text-gray-900">
+                    <Input
+                      value={answer.text}
+                      onChange={(e) => handleAnswerChange(index, e.target.value)}
+                      placeholder={`Option ${index + 1}`}
+                      className="flex-1"
+                      maxLength={128}
+                      aria-label={`Option ${index + 1}`}
+                    />
+                  </label>
                   {answers.length > 2 && (
                     <button
                       onClick={() => handleRemoveAnswer(index)}
@@ -303,29 +307,31 @@ export function QuizSetup() {
         {/* True/False Answers */}
         {quizType === "true-false" && (
           <div className="bg-white rounded-2xl p-6 shadow-sm mb-6">
-            <label className="block font-semibold text-gray-900 mb-4">
+            <label id="truefalse-label" className="block font-semibold text-gray-900 mb-4">
               Correct Answer
             </label>
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <input
+                  id="quiz-true"
                   type="radio"
                   name="trueFalse"
                   checked={answers[0].isCorrect}
                   onChange={() => handleCorrectAnswerChange(0)}
                   className="w-4 h-4 text-blue-600"
                 />
-                <span className="text-gray-900">True</span>
+                <label htmlFor="quiz-true" className="text-gray-900">True</label>
               </div>
               <div className="flex items-center gap-3">
                 <input
+                  id="quiz-false"
                   type="radio"
                   name="trueFalse"
                   checked={answers[1].isCorrect}
                   onChange={() => handleCorrectAnswerChange(1)}
                   className="w-4 h-4 text-blue-600"
                 />
-                <span className="text-gray-900">False</span>
+                <label htmlFor="quiz-false" className="text-gray-900">False</label>
               </div>
             </div>
           </div>
@@ -353,7 +359,7 @@ export function QuizSetup() {
 
             <div className="bg-white rounded-2xl p-6 shadow-sm mb-6">
               <div className="flex items-center justify-between mb-4">
-                <label className="block font-semibold text-gray-900">
+                <label id="keywords-label" className="block font-semibold text-gray-900">
                   Acceptable Keywords (Optional)
                 </label>
                 {keywords.length < 10 && (
@@ -380,6 +386,8 @@ export function QuizSetup() {
                       <button
                         onClick={() => handleRemoveKeyword(index)}
                         className="text-red-500 hover:text-red-600 flex-shrink-0"
+                        aria-label={`Remove keyword ${index + 1}`}
+                        title="Remove keyword"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>

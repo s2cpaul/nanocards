@@ -284,8 +284,10 @@ export function Settings() {
         {/* Search Bar */}
         <div className="mb-6">
           <div className="relative">
+            <label htmlFor="settings-search" className="sr-only">Search content types</label>
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <Input
+              id="settings-search"
               type="text"
               placeholder="Search content types"
               value={searchQuery}

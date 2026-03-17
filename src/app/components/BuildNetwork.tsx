@@ -316,8 +316,10 @@ export function BuildNetwork() {
 
         {/* Search Bar */}
         <div className="relative mb-6">
+          <label htmlFor="network-search" className="sr-only">Search content types</label>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <Input
+            id="network-search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search content types"
@@ -344,9 +346,11 @@ export function BuildNetwork() {
                 )}
               </div>
               <Input
+                id={`link-${link.id}`}
                 value={link.value}
                 onChange={(e) => handleUpdateLink(link.id, e.target.value)}
                 placeholder={link.placeholder}
+                aria-label={`${link.name} URL`}
                 className="h-11"
               />
             </div>
