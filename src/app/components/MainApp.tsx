@@ -298,21 +298,23 @@ export function MainApp() {
     }
   };
 
-  // Filter cards
+  // Filter cards - RULE: Card #001 is NEVER filtered out
   const filteredCards = cards
     .filter((card: any) => {
-      // Card #001 is always visible to everyone
+      // RULE: Card #001 is ALWAYS visible to everyone - it can never be filtered out
       const isCard001 = card.globalCardNumber === '001';
+      if (isCard001) return true; // Card #001 ALWAYS passes through
+      
+      // For all other cards: must match search AND view
       const matchesSearch = card.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         card.id.includes(searchQuery) ||
         card.createdBy.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesView = cardView === "all" || card.createdBy === currentUserEmail;
       
-      // Show card #001 always, or show other cards if they match search and view
-      return isCard001 || (matchesSearch && matchesView);
+      return matchesSearch && matchesView;
     })
     .sort((a: any, b: any) => {
-      // Card #001 always appears first
+      // RULE: Card #001 always appears first
       if (a.globalCardNumber === '001') return -1;
       if (b.globalCardNumber === '001') return 1;
       // Then sort by newest first
