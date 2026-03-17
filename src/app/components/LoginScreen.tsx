@@ -48,7 +48,11 @@ export function LoginScreen() {
         // Provide more specific error messages
         let errorMessage = "Failed to login";
         
-        if (error.message?.includes('Invalid login credentials')) {
+        // Filter out internal API key errors - these should never be shown to users
+        if (error.message?.includes('failed') && error.message?.toLowerCase().includes('api')) {
+          console.error('[LoginScreen] API key issue detected:', error.message);
+          errorMessage = "Authentication service temporarily unavailable. Please try again in a moment.";
+        } else if (error.message?.includes('Invalid login credentials')) {
           errorMessage = "Invalid email or password";
         } else if (error.message?.includes('Email not confirmed')) {
           errorMessage = "Please confirm your email first";
@@ -56,6 +60,8 @@ export function LoginScreen() {
           errorMessage = "Network error - please check your internet connection and try again";
         } else if (error.status === 0) {
           errorMessage = "Cannot reach Supabase - check your internet connection";
+        } else if (error.message?.toLowerCase().includes('invalid') || error.message?.toLowerCase().includes('unauthorized')) {
+          errorMessage = "Authentication failed. Please try again.";
         } else {
           errorMessage = error.message || "Failed to login";
         }
@@ -86,10 +92,15 @@ export function LoginScreen() {
       });
       
       let errorMessage = "Failed to login";
-      if (error?.message?.includes('NetworkError') || error?.message?.includes('fetch')) {
+      if (error?.message?.includes('failed') && error?.message?.toLowerCase().includes('api')) {
+        console.error('[LoginScreen] API key issue detected:', error.message);
+        errorMessage = "Authentication service temporarily unavailable. Please try again in a moment.";
+      } else if (error?.message?.includes('NetworkError') || error?.message?.includes('fetch')) {
         errorMessage = "Network error - please check your internet connection";
       } else if (error?.message?.includes('offline')) {
         errorMessage = "You appear to be offline - please check your internet";
+      } else if (error?.message?.toLowerCase().includes('invalid') || error?.message?.toLowerCase().includes('unauthorized')) {
+        errorMessage = "Authentication failed. Please try again.";
       } else {
         errorMessage = error?.message || "Failed to login";
       }
