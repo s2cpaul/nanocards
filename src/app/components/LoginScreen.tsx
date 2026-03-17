@@ -119,10 +119,11 @@ export function LoginScreen() {
 
         <form onSubmit={handleLogin} className="w-full max-w-md space-y-4">
           <div>
-            <label className="block text-white/80 text-sm font-medium mb-2">Email</label>
+            <label htmlFor="login-email" className="block text-white/80 text-sm font-medium mb-2">Email</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" strokeWidth={1.5} />
               <input
+                id="login-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -134,10 +135,11 @@ export function LoginScreen() {
           </div>
 
           <div>
-            <label className="block text-white/80 text-sm font-medium mb-2">Password</label>
+            <label htmlFor="login-password" className="block text-white/80 text-sm font-medium mb-2">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" strokeWidth={1.5} />
               <input
+                id="login-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

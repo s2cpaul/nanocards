@@ -113,10 +113,11 @@ export function SignupScreen() {
         <form onSubmit={handleSignup} className="w-full max-w-md space-y-4">
           {/* Display Name */}
           <div>
-            <label className="block text-white/80 text-sm font-medium mb-2">Display Name (Optional)</label>
+            <label htmlFor="signup-displayName" className="block text-white/80 text-sm font-medium mb-2">Display Name (Optional)</label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" strokeWidth={1.5} />
               <input
+                id="signup-displayName"
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
@@ -128,10 +129,11 @@ export function SignupScreen() {
 
           {/* Email */}
           <div>
-            <label className="block text-white/80 text-sm font-medium mb-2">Email</label>
+            <label htmlFor="signup-email" className="block text-white/80 text-sm font-medium mb-2">Email</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" strokeWidth={1.5} />
               <input
+                id="signup-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -144,10 +146,11 @@ export function SignupScreen() {
 
           {/* Password */}
           <div>
-            <label className="block text-white/80 text-sm font-medium mb-2">Password</label>
+            <label htmlFor="signup-password" className="block text-white/80 text-sm font-medium mb-2">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" strokeWidth={1.5} />
               <input
+                id="signup-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -160,10 +163,11 @@ export function SignupScreen() {
 
           {/* Confirm Password */}
           <div>
-            <label className="block text-white/80 text-sm font-medium mb-2">Confirm Password</label>
+            <label htmlFor="signup-confirmPassword" className="block text-white/80 text-sm font-medium mb-2">Confirm Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" strokeWidth={1.5} />
               <input
+                id="signup-confirmPassword"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}

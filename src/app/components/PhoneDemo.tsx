@@ -164,10 +164,11 @@ export function PhoneDemo() {
 
                       {/* Email Input */}
                       <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="demo-email" className="block text-sm font-medium text-gray-700 mb-2">
                           Email
                         </label>
                         <input
+                          id="demo-email"
                           type="email"
                           placeholder="you@example.com"
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -176,12 +177,13 @@ export function PhoneDemo() {
 
                       {/* Card Information */}
                       <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="demo-cardnumber" className="block text-sm font-medium text-gray-700 mb-2">
                           Card information
                         </label>
                         <div className="border border-gray-300 rounded-lg overflow-hidden">
                           <div className="relative">
                             <input
+                              id="demo-cardnumber"
                               type="text"
                               placeholder="1234 1234 1234 1234"
                               className="w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 border-b border-gray-300"
@@ -198,11 +200,13 @@ export function PhoneDemo() {
                           </div>
                           <div className="flex">
                             <input
+                              id="demo-cardexpiry"
                               type="text"
                               placeholder="MM / YY"
                               className="flex-1 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 border-r border-gray-300"
                             />
                             <input
+                              id="demo-cardcvc"
                               type="text"
                               placeholder="CVC"
                               className="flex-1 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -213,10 +217,11 @@ export function PhoneDemo() {
 
                       {/* Cardholder Name */}
                       <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="demo-cardholder" className="block text-sm font-medium text-gray-700 mb-2">
                           Cardholder name
                         </label>
                         <input
+                          id="demo-cardholder"
                           type="text"
                           placeholder="Full name on card"
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -225,10 +230,10 @@ export function PhoneDemo() {
 
                       {/* Country */}
                       <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="demo-country" className="block text-sm font-medium text-gray-700 mb-2">
                           Country or region
                         </label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                        <select id="demo-country" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
                           <option>United States</option>
                           <option>Canada</option>
                           <option>United Kingdom</option>
