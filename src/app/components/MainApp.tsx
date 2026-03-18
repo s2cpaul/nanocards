@@ -53,7 +53,7 @@ export function MainApp() {
         const demoCards: NanoCard[] = [
           {
             id: "demo-1",
-            title: "Welcome to nAnoCards!",
+            title: "nAnoCards - Mobile Micro Learning!",
             objective: "Get started with the simplified offline version",
             videoTime: "0:30",
             videoUrl: "https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/WorkforcePromo.mp4",
@@ -210,6 +210,7 @@ export function MainApp() {
                 informationText={card.information}
                 thumbnail={card.thumbnailUrl}
                 qrCodeUrl={card.qrCodeUrl}
+                onEdit={() => navigate(`/edit-card?cardId=${card.id}`)}
               />
             ))}
           </div>

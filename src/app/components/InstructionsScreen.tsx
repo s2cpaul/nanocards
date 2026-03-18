@@ -7,6 +7,11 @@ import { GlobalHeader } from "./GlobalHeader";
 import { useState, useEffect } from "react";
 import { supabase, API_BASE_URL, getAuthHeaders } from "../../lib/supabase";
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 export function InstructionsScreen() {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
@@ -19,9 +24,24 @@ export function InstructionsScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
     checkAuth();
+    
+    // Check if already installed
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+    }
+    
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
   }, []);
 
   const checkAuth = async () => {
@@ -59,6 +79,35 @@ export function InstructionsScreen() {
     navigate('/create');
   };
 
+  const handleBeforeInstallPrompt = (e: Event) => {
+    e.preventDefault();
+    const promptEvent = e as unknown as BeforeInstallPromptEvent;
+    setDeferredPrompt(promptEvent);
+  };
+
+  const handleAppInstalled = () => {
+    setIsInstalled(true);
+    toast.success("nAnoCards was installed successfully!");
+  };
+
+  const handleInstallPWA = async () => {
+    if (!deferredPrompt) return;
+
+    // Show the install prompt
+    deferredPrompt.prompt();
+
+    // Wait for the user's response
+    const { outcome } = await deferredPrompt.userChoice;
+
+    if (outcome === 'accepted') {
+      toast.success("nAnoCards installation accepted!");
+    } else {
+      toast.info("nAnoCards installation dismissed.");
+    }
+
+    setDeferredPrompt(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Global Header */}
@@ -92,6 +141,15 @@ export function InstructionsScreen() {
                   🚀 Blazing Fast
                 </div>
               </div>
+              {!isInstalled && deferredPrompt && (
+                <button
+                  onClick={handleInstallPWA}
+                  className="mt-4 bg-white text-[#1e3a8a] hover:bg-blue-50 font-semibold text-sm px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Install nAnoCards App
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -454,6 +512,29 @@ export function InstructionsScreen() {
         >
           Back to Feed
         </button>
+
+        {/* PWA Install Prompt */}
+        {!isInstalled && deferredPrompt && (
+          <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-4 max-w-sm w-full z-50">
+            <p className="text-sm text-gray-700 mb-2">
+              Install nAnoCards app for a better experience?
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleInstallPWA}
+                className="flex-1 bg-gradient-to-r from-blue-900 to-indigo-700 hover:from-blue-950 hover:to-indigo-800 text-white font-semibold py-2 px-4 rounded-lg transition-colors text-sm"
+              >
+                Install App
+              </button>
+              <button
+                onClick={() => setDeferredPrompt(null)}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors text-sm"
+              >
+                Maybe Later
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

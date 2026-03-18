@@ -1,5 +1,5 @@
 import {
-  Heart, Download, Info, FileText, Globe, Linkedin,
+  Heart, Info, Globe, Linkedin,
   MessageCircle, Youtube, Github, Share2, Camera,
   Mail, Link as LinkIcon, Edit3, Facebook,
 } from "lucide-react";
@@ -79,11 +79,24 @@ export function UniversalCard({
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200 w-full max-w-[620px] mx-auto">
-      {/* Title - 40 char limit enforced */}
+      {/* Header */}
       <div className="px-6 py-4">
-        <h3 className="text-xl font-bold text-gray-900 leading-tight">
-          {title.slice(0, 40)}
-        </h3>
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <h3 className="text-xl font-bold text-gray-900 leading-tight">
+              {title.slice(0, 40)}
+            </h3>
+          </div>
+          <div className="flex items-center ml-4">
+            <button
+              onClick={onLike}
+              className={`p-2 rounded-lg transition-colors ${isLiked ? 'bg-red-100' : 'hover:bg-gray-50'}`}
+              title={isLiked ? 'Unlike' : 'Like'}
+            >
+              <Heart className={`w-4 h-4 ${isLiked ? 'text-red-500' : 'text-gray-400'}`} strokeWidth={1.5} />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Video Area with QR Code */}
@@ -124,42 +137,9 @@ export function UniversalCard({
 
         {/* QR Code - Top Right */}
         {!isVideoPlaying && (
-          <div className="absolute top-3 right-3 bg-[#1e3a8a] rounded-xl p-2 shadow-lg">
+          <div className="absolute top-3 right-3 bg-transparent rounded-xl p-2 shadow-lg">
             <QRCodeSVG value={cardUrl} size={80} level="M" includeMargin={false} />
           </div>
-        )}
-
-        {/* Download Button */}
-        {!isVideoPlaying && (
-          <button
-            onClick={() => {
-              // Create SVG content for download
-              const svgContent = `<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                <rect width="200" height="200" fill="white"/>
-                <g transform="translate(20,20)">
-                  <rect width="160" height="160" fill="white"/>
-                  ${document.querySelector('[data-testid="qr-code"] svg')?.innerHTML || ''}
-                </g>
-              </svg>`;
-
-              // Create download link
-              const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `nAnoCard-${id}-qr.svg`;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(url);
-
-              toast.success('QR Code downloaded!');
-            }}
-            className="absolute top-[108px] right-3 bg-white rounded-xl p-2.5 shadow-lg hover:bg-gray-50 transition-colors"
-            title="Download QR Code"
-          >
-            <Download className="w-6 h-6 text-gray-600" strokeWidth={1.5} />
-          </button>
         )}
 
         {/* Duration - Bottom Right */}
@@ -194,7 +174,8 @@ export function UniversalCard({
                 </div>
                 <div className="absolute top-full left-8">
                   <svg width="24" height="12" viewBox="0 0 24 12" fill="none">
-                    <path d="M12 12C12 12 4 4 0 0H24C20 4 12 12 12 12Z" fill="white" stroke="#E5E7EB" strokeWidth="2" />
+                    <path d="M12 12C12 12 4 4 0 0H24C20 4 12 12 12 12Z" fill="white" />
+                    <path d="M12 12C12 12 4 4 0 0H24C20 4 12 12 12 12Z" stroke="#F3F4F6" />
                   </svg>
                 </div>
               </div>
@@ -202,69 +183,104 @@ export function UniversalCard({
           )}
         </div>
 
-        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Document">
-          <FileText className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-        </button>
-        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Website">
-          <Globe className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-        </button>
-        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="LinkedIn">
-          <Linkedin className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-        </button>
-        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Discord">
-          <MessageCircle className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-        </button>
-        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="YouTube">
-          <Youtube className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-        </button>
-        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="GitHub">
-          <Github className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-        </button>
-        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Facebook">
-          <Facebook className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-        </button>
+        {/* Social/Resource Icons - Right Side */}
+        <div className="flex items-center space-x-4">
+          {/* Share Button */}
+          <button
+            className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
+            title="Share"
+            onClick={() => {
+              navigator.clipboard.writeText(cardUrl);
+              toast.success('Card link copied to clipboard!');
+            }}
+          >
+            <Share2 className="w-5 h-5 text-gray-400" strokeWidth={1.5} />
+          </button>
+
+          {/* Message Button (for direct link sharing) */}
+          <a
+            href={`mailto:?subject=Check out this nAnoCard&body=I found this nAnoCard interesting: ${cardUrl}`}
+            className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
+            title="Share via Email"
+          >
+            <Mail className="w-5 h-5 text-gray-400" strokeWidth={1.5} />
+          </a>
+
+          {/* Facebook Share */}
+          <a
+            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(cardUrl)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
+            title="Share on Facebook"
+          >
+            <Facebook className="w-5 h-5 text-gray-400" strokeWidth={1.5} />
+          </a>
+
+          {/* LinkedIn Share */}
+          <a
+            href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(cardUrl)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
+            title="Share on LinkedIn"
+          >
+            <Linkedin className="w-5 h-5 text-gray-400" strokeWidth={1.5} />
+          </a>
+
+          {/* Twitter Share (via SMS as fallback) */}
+          <a
+            href={`sms:?body=Check out this nAnoCard: ${cardUrl}`}
+            className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
+            title="Share via SMS"
+          >
+            <MessageCircle className="w-5 h-5 text-gray-400" strokeWidth={1.5} />
+          </a>
+
+          {/* YouTube Link (if videoUrl is present) */}
+          {videoUrl && (
+            <a
+              href={videoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
+              title="Watch on YouTube"
+            >
+              <Youtube className="w-5 h-5 text-gray-400" strokeWidth={1.5} />
+            </a>
+          )}
+
+          {/* GitHub Link (for developer cards) */}
+          {id.startsWith('dev-') && (
+            <a
+              href={`https://github.com/${id.replace('dev-', '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
+              title="View on GitHub"
+            >
+              <Github className="w-5 h-5 text-gray-400" strokeWidth={1.5} />
+            </a>
+          )}
+        </div>
       </div>
 
-      {/* Row 2 - Share, Camera, Email, Link, Heart (RED), Card# */}
+      {/* Row 2 - Action Buttons */}
       <div className="px-6 py-4 flex items-center justify-between">
-        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Share">
-          <Share2 className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-        </button>
-        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Camera">
-          <Camera className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-        </button>
-        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Email">
-          <Mail className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-        </button>
-        <button
-          className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors relative"
-          title={linkCopied ? "Copied" : "Copy Link"}
-          onClick={handleCopyLink}
-        >
-          <LinkIcon className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-        </button>
-
-        {/* Heart - THE ONLY COLORED ICON (red) */}
-        <button
-          onClick={onLike}
-          className="flex items-center gap-2 hover:bg-gray-50 px-2 py-1.5 rounded-lg transition-colors"
-        >
-          <Heart
-            className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : 'text-red-500'}`}
-            strokeWidth={1.5}
-          />
-          <span className="text-gray-900 font-bold text-lg">{likes}</span>
-        </button>
-
-        {/* Card number + edit pencil (ALWAYS VISIBLE) */}
-        <div className="flex flex-col items-center gap-0.5">
-          <span className="text-gray-600 font-semibold text-base">#{cardNumber}</span>
+        <div className="flex items-center space-x-3">
+          {/* Action buttons can be added here if needed */}
+        </div>
+        <div className="flex items-center space-x-2">
+          {/* Card Number and Edit Pencil - Other Corner */}
+          <span className="text-sm font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded">
+            #{cardNumber}
+          </span>
           <button
-            onClick={onEdit || (() => toast.error('You must be logged in to edit cards'))}
-            className="p-0.5 rounded hover:bg-gray-100 transition-colors"
+            onClick={onEdit}
+            className="text-gray-600 hover:text-gray-800 p-2 rounded hover:bg-gray-50 transition-colors"
             title="Edit Card"
           >
-            <Edit3 className="w-4 h-4 text-gray-400" strokeWidth={1.5} />
+            <Edit3 className="w-4 h-4" strokeWidth={1.5} />
           </button>
         </div>
       </div>

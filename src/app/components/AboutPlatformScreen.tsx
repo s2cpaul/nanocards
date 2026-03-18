@@ -1,8 +1,14 @@
-import { ArrowLeft, Zap, Globe, Lock, Layers, Code, Smartphone, HardDrive } from "lucide-react";
+import { ArrowLeft, Zap, Globe, Lock, Layers, Code, Smartphone, HardDrive, Download } from "lucide-react";
 import { useNavigate } from "react-router";
 import { HamburgerMenu } from "./HamburgerMenu";
 import { useState, useEffect } from "react";
 import { supabase, API_BASE_URL, getAuthHeaders } from "../../lib/supabase";
+import { toast } from "sonner";
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 
 /**
  * AboutPlatformScreen - Platform overview
@@ -13,6 +19,8 @@ export function AboutPlatformScreen() {
   const [currentUserEmail, setCurrentUserEmail] = useState("");
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [userPoints, setUserPoints] = useState(0);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -49,6 +57,42 @@ export function AboutPlatformScreen() {
     }
   };
 
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      // Show the install prompt
+      deferredPrompt.prompt();
+
+      // Wait for the user's response
+      const { outcome } = await deferredPrompt.userChoice;
+
+      if (outcome === 'accepted') {
+        toast.success('Thanks for installing our app!');
+        setIsInstalled(true);
+      } else {
+        toast.dismiss();
+      }
+
+      // Clear the deferred prompt
+      setDeferredPrompt(null);
+    }
+  };
+
+  // Listen for the beforeinstallprompt event
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
+      // Prevent the mini-info bar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later.
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header - Back arrow + Title + Hamburger */}
@@ -77,9 +121,19 @@ export function AboutPlatformScreen() {
         {/* Hero Banner */}
         <div className="bg-[#1e3a8a] rounded-xl p-6 text-white mb-5">
           <h2 className="text-2xl font-bold mb-2">nAnoCards Platform</h2>
-          <p className="text-blue-200 text-sm leading-relaxed">
+          <p className="text-blue-200 text-sm leading-relaxed mb-4">
             A lightweight PWA for sharing AI product pitch cards. Built on edge infrastructure for global performance.
           </p>
+          {!isInstalled && deferredPrompt && (
+            <button
+              onClick={handleInstallClick}
+              className="bg-white text-[#1e3a8a] hover:bg-gray-100 font-semibold text-sm px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+              aria-label="Install nAnoCards app"
+            >
+              <Download className="w-4 h-4" strokeWidth={2} />
+              Install App
+            </button>
+          )}
         </div>
 
         {/* What is nAnoCards? */}
