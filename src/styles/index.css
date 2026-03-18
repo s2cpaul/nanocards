@@ -1,3 +1,18 @@
 @import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
+
+/* Ensure card headers show on a single line with ellipsis when needed */
+.single-line-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+/* On small screens, slightly reduce title size to help long titles fit */
+@media (max-width: 640px) {
+  .single-line-title {
+    font-size: 0.95rem; /* slightly smaller on mobile */
+  }
+}

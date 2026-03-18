@@ -114,6 +114,12 @@ export function LandingPage() {
                 >
                   LOOK AROUND
                 </button>
+
+                {/* New two-line caption below the button */}
+                <div className="mt-4 text-center text-white">
+                  <p className="text-sm opacity-90">Proof of Work</p>
+                  <p className="text-lg font-semibold mt-1">AI Leadership!</p>
+                </div>
               </div>
 
               {/* Home Indicator */}
