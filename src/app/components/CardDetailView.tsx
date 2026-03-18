@@ -48,12 +48,37 @@ export function CardDetailView() {
     
     setIsLoading(true);
     try {
-      const headers = await getAuthHeaders();
-      const response = await fetch(`${API_BASE_URL}/cards/${cardId}`, { headers });
+      // Use direct Supabase query instead of Edge Function
+      const { data, error } = await supabase
+        .from('cards')
+        .select('*')
+        .eq('id', cardId)
+        .single();
       
-      if (response.ok) {
-        const data = await response.json();
-        setCard(data.card);
+      if (error) {
+        console.error('Error fetching card:', error);
+        toast.error('Card not found');
+        navigate('/app');
+        return;
+      }
+      
+      if (data) {
+        // Transform the data to match NanoCard interface
+        const cardData: NanoCard = {
+          id: data.id,
+          title: data.title,
+          videoUrl: data.video_url,
+          videoTime: data.video_time,
+          likes: data.likes || 0,
+          createdBy: data.created_by,
+          createdAt: data.created_at,
+          information: data.information,
+          insights: data.insights || {},
+          thumbnailUrl: data.thumbnail_url,
+          qrCodeUrl: data.qr_code_url,
+          globalCardNumber: data.global_card_number
+        };
+        setCard(cardData);
       } else {
         toast.error('Card not found');
         navigate('/app');
@@ -93,19 +118,26 @@ export function CardDetailView() {
     });
 
     try {
-      const headers = await getAuthHeaders();
-      await fetch(`${API_BASE_URL}/cards/${card.id}/like`, {
-        method: 'POST',
-        headers,
-      });
+      // Use direct Supabase update instead of API endpoint
+      const newLikes = card.likes + (isLiked ? -1 : 1);
+      const { error } = await supabase
+        .from('cards')
+        .update({ likes: newLikes })
+        .eq('id', card.id);
+      
+      if (error) {
+        console.error('Error updating likes:', error);
+        // Revert on error
+        setLikedCards(likedCards);
+        setCard(card);
+        toast.error('Failed to update like');
+      }
     } catch (error) {
-      console.error('Error liking card:', error);
+      console.error('Error updating likes:', error);
       // Revert on error
       setLikedCards(likedCards);
-      setCard({
-        ...card,
-        likes: card.likes + (isLiked ? 1 : -1)
-      });
+      setCard(card);
+      toast.error('Failed to update like');
     }
   };
 

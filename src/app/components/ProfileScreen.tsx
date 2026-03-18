@@ -54,6 +54,7 @@ export function ProfileScreen() {
   const [likedCards, setLikedCards] = useState<Set<string>>(new Set());
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -213,6 +214,42 @@ export function ProfileScreen() {
     } catch (error) {
       console.error("Error liking card:", error);
     }
+  };
+
+  const handleSaveCard = async (cardId: string, data: { title: string; informationText?: string }) => {
+    try {
+      // Use service role key for direct database access
+      const { data: updateData, error } = await supabase
+        .from('cards')
+        .update({
+          title: data.title,
+          information: data.informationText,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', cardId)
+        .select();
+
+      if (error) {
+        console.error('Error updating card:', error);
+        toast.error('Failed to update card');
+        return;
+      }
+
+      // Update local state
+      setUserCards(userCards.map(card =>
+        card.id === cardId ? { ...card, ...updateData[0] } : card
+      ));
+
+      toast.success('Card updated successfully');
+      setEditingCardId(null);
+    } catch (error) {
+      console.error('Error saving card:', error);
+      toast.error('Failed to save card');
+    }
+  };
+
+  const handleToggleEdit = (cardId: string) => {
+    setEditingCardId(editingCardId === cardId ? null : cardId);
   };
 
   const getTierBadge = () => {
@@ -440,6 +477,9 @@ export function ProfileScreen() {
                     informationText={card.information || card.insights?.information}
                     qrCodeUrl={card.qrCodeUrl}
                     onEdit={isOwner ? () => navigate(`/edit/${card.id}`) : undefined}
+                    isEditing={editingCardId === card.id}
+                    onToggleEdit={() => handleToggleEdit(card.id)}
+                    onSave={(data) => handleSaveCard(card.id, data)}
                   />
                 );
               })}

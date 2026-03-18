@@ -1,11 +1,13 @@
 import {
-  Heart, Info, Globe, Linkedin,
+  Heart, Download, Info, FileText, Globe, Linkedin,
   MessageCircle, Youtube, Github, Share2, Camera,
   Mail, Link as LinkIcon, Edit3, Facebook,
+  Check, X,
 } from "lucide-react";
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
 
 interface UniversalCardProps {
   id: string;
@@ -18,8 +20,11 @@ interface UniversalCardProps {
   cardNumber: string;
   informationText?: string;
   onEdit?: () => void;
+  onSave?: (data: { title: string; informationText?: string }) => void;
   thumbnail?: string;
   qrCodeUrl?: string;
+  isEditing?: boolean;
+  onToggleEdit?: () => void;
 }
 
 /**
@@ -43,14 +48,19 @@ export function UniversalCard({
   cardNumber,
   informationText = "This is a sample training module designed to help you master key concepts. Complete the quiz below to test your knowledge and earn 10 points for each correct answer.",
   onEdit,
+  onSave,
   thumbnail,
   qrCodeUrl: storedQrCodeUrl,
+  isEditing = false,
+  onToggleEdit,
 }: UniversalCardProps) {
   // Use stored deep link from backend if available, otherwise generate from current origin
   const cardUrl = storedQrCodeUrl || `${window.location.origin}/card/${id}`;
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [editTitle, setEditTitle] = useState(title);
+  const [editInformation, setEditInformation] = useState(informationText);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleCopyLink = async () => {
@@ -79,24 +89,68 @@ export function UniversalCard({
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200 w-full max-w-[620px] mx-auto">
-      {/* Header */}
+      {/* Title - 40 char limit enforced */}
       <div className="px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <h3 className="text-xl font-bold text-gray-900 leading-tight">
-              {title.slice(0, 40)}
-            </h3>
+        {isEditing ? (
+          <div className="space-y-3">
+            <div>
+              <label htmlFor={`edit-title-${id}`} className="block text-sm font-medium text-gray-700 mb-1">
+                Title
+              </label>
+              <input
+                id={`edit-title-${id}`}
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                maxLength={40}
+                placeholder="Enter card title"
+              />
+            </div>
+            <div>
+              <label htmlFor={`edit-info-${id}`} className="block text-sm font-medium text-gray-700 mb-1">
+                Information
+              </label>
+              <textarea
+                id={`edit-info-${id}`}
+                value={editInformation}
+                onChange={(e) => setEditInformation(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                rows={3}
+                placeholder="Enter information text"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => {
+                  setEditTitle(title);
+                  setEditInformation(informationText);
+                  onToggleEdit?.();
+                }}
+                className="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1"
+              >
+                <X className="w-4 h-4" />
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (onSave) {
+                    onSave({ title: editTitle, informationText: editInformation });
+                  }
+                  onToggleEdit?.();
+                }}
+                className="px-3 py-1.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-1"
+              >
+                <Check className="w-4 h-4" />
+                Save
+              </button>
+            </div>
           </div>
-          <div className="flex items-center ml-4">
-            <button
-              onClick={onLike}
-              className={`p-2 rounded-lg transition-colors ${isLiked ? 'bg-red-100' : 'hover:bg-gray-50'}`}
-              title={isLiked ? 'Unlike' : 'Like'}
-            >
-              <Heart className={`w-4 h-4 ${isLiked ? 'text-red-500' : 'text-gray-400'}`} strokeWidth={1.5} />
-            </button>
-          </div>
-        </div>
+        ) : (
+          <h3 className="text-xl font-bold text-gray-900 leading-tight">
+            {title.slice(0, 40)}
+          </h3>
+        )}
       </div>
 
       {/* Video Area with QR Code */}
@@ -113,10 +167,9 @@ export function UniversalCard({
             className="absolute inset-0 w-full h-full object-cover"
             src={`${videoUrl}#t=0.1`}
             preload="metadata"
+            muted
             playsInline
-            controls
             onEnded={() => setIsVideoPlaying(false)}
-            onPlay={() => setIsVideoPlaying(true)}
           />
         ) : (
           <div className="absolute inset-0 bg-gray-900" />
@@ -136,11 +189,126 @@ export function UniversalCard({
         )}
 
         {/* QR Code - Top Right */}
-        {!isVideoPlaying && (
-          <div className="absolute top-3 right-3 bg-transparent rounded-xl p-2 shadow-lg">
-            <QRCodeSVG value={cardUrl} size={80} level="M" includeMargin={false} />
-          </div>
-        )}
+        <button
+          onClick={async () => {
+            try {
+              // Create PDF with QR code and title
+              const pdf = new jsPDF();
+              
+              // Add title
+              pdf.setFontSize(20);
+              pdf.text(title.slice(0, 40), 20, 30);
+              
+              // Add QR code as image
+              const qrCanvas = document.createElement('canvas');
+              const qrSize = 150;
+              qrCanvas.width = qrSize;
+              qrCanvas.height = qrSize;
+              const qrCtx = qrCanvas.getContext('2d');
+              
+              if (qrCtx) {
+                // Fill white background
+                qrCtx.fillStyle = 'white';
+                qrCtx.fillRect(0, 0, qrSize, qrSize);
+                
+                // Create QR code SVG and convert to canvas
+                const qrSvg = document.querySelector('.absolute.top-3.right-3 svg');
+                if (qrSvg) {
+                  const svgData = new XMLSerializer().serializeToString(qrSvg);
+                  const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                  const svgUrl = URL.createObjectURL(svgBlob);
+                  
+                  const img = new Image();
+                  img.onload = () => {
+                    qrCtx.drawImage(img, 0, 0, qrSize, qrSize);
+                    const qrDataUrl = qrCanvas.toDataURL('image/png');
+                    
+                    // Add QR code to PDF
+                    pdf.addImage(qrDataUrl, 'PNG', 20, 50, 80, 80);
+                    
+                    // Add card URL below QR code
+                    pdf.setFontSize(10);
+                    pdf.text(`Card URL: ${cardUrl}`, 20, 150);
+                    
+                    // Save PDF
+                    pdf.save(`nAnoCard-${id}.pdf`);
+                    URL.revokeObjectURL(svgUrl);
+                    toast.success('PDF downloaded!');
+                  };
+                  img.src = svgUrl;
+                }
+              }
+            } catch (error) {
+              console.error('Error generating PDF:', error);
+              toast.error('Failed to generate PDF');
+            }
+          }}
+          className="absolute top-3 right-3 bg-white rounded-xl p-2 shadow-lg hover:bg-gray-50 transition-colors"
+          title="Download PDF with QR Code"
+        >
+          <QRCodeSVG value={cardUrl} size={80} level="M" includeMargin={false} />
+        </button>
+
+        {/* Download Button */}
+        <button
+          onClick={async () => {
+            try {
+              // Create PDF with QR code and title
+              const pdf = new jsPDF();
+              
+              // Add title
+              pdf.setFontSize(20);
+              pdf.text(title.slice(0, 40), 20, 30);
+              
+              // Add QR code as image
+              const qrCanvas = document.createElement('canvas');
+              const qrSize = 150;
+              qrCanvas.width = qrSize;
+              qrCanvas.height = qrSize;
+              const qrCtx = qrCanvas.getContext('2d');
+              
+              if (qrCtx) {
+                // Fill white background
+                qrCtx.fillStyle = 'white';
+                qrCtx.fillRect(0, 0, qrSize, qrSize);
+                
+                // Create QR code SVG and convert to canvas
+                const qrSvg = document.querySelector('.absolute.top-3.right-3 svg');
+                if (qrSvg) {
+                  const svgData = new XMLSerializer().serializeToString(qrSvg);
+                  const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                  const svgUrl = URL.createObjectURL(svgBlob);
+                  
+                  const img = new Image();
+                  img.onload = () => {
+                    qrCtx.drawImage(img, 0, 0, qrSize, qrSize);
+                    const qrDataUrl = qrCanvas.toDataURL('image/png');
+                    
+                    // Add QR code to PDF
+                    pdf.addImage(qrDataUrl, 'PNG', 20, 50, 80, 80);
+                    
+                    // Add card URL below QR code
+                    pdf.setFontSize(10);
+                    pdf.text(`Card URL: ${cardUrl}`, 20, 150);
+                    
+                    // Save PDF
+                    pdf.save(`nAnoCard-${id}.pdf`);
+                    URL.revokeObjectURL(svgUrl);
+                    toast.success('PDF downloaded!');
+                  };
+                  img.src = svgUrl;
+                }
+              }
+            } catch (error) {
+              console.error('Error generating PDF:', error);
+              toast.error('Failed to generate PDF');
+            }
+          }}
+          className="absolute top-[108px] right-3 bg-white rounded-xl p-2.5 shadow-lg hover:bg-gray-50 transition-colors"
+          title="Download PDF with QR Code"
+        >
+          <Download className="w-6 h-6 text-gray-600" strokeWidth={1.5} />
+        </button>
 
         {/* Duration - Bottom Right */}
         {videoTime && (
@@ -174,8 +342,7 @@ export function UniversalCard({
                 </div>
                 <div className="absolute top-full left-8">
                   <svg width="24" height="12" viewBox="0 0 24 12" fill="none">
-                    <path d="M12 12C12 12 4 4 0 0H24C20 4 12 12 12 12Z" fill="white" />
-                    <path d="M12 12C12 12 4 4 0 0H24C20 4 12 12 12 12Z" stroke="#F3F4F6" />
+                    <path d="M12 12C12 12 4 4 0 0H24C20 4 12 12 12 12Z" fill="white" stroke="#E5E7EB" strokeWidth="2" />
                   </svg>
                 </div>
               </div>
@@ -183,104 +350,69 @@ export function UniversalCard({
           )}
         </div>
 
-        {/* Social/Resource Icons - Right Side */}
-        <div className="flex items-center space-x-4">
-          {/* Share Button */}
-          <button
-            className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
-            title="Share"
-            onClick={() => {
-              navigator.clipboard.writeText(cardUrl);
-              toast.success('Card link copied to clipboard!');
-            }}
-          >
-            <Share2 className="w-5 h-5 text-gray-400" strokeWidth={1.5} />
-          </button>
-
-          {/* Message Button (for direct link sharing) */}
-          <a
-            href={`mailto:?subject=Check out this nAnoCard&body=I found this nAnoCard interesting: ${cardUrl}`}
-            className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
-            title="Share via Email"
-          >
-            <Mail className="w-5 h-5 text-gray-400" strokeWidth={1.5} />
-          </a>
-
-          {/* Facebook Share */}
-          <a
-            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(cardUrl)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
-            title="Share on Facebook"
-          >
-            <Facebook className="w-5 h-5 text-gray-400" strokeWidth={1.5} />
-          </a>
-
-          {/* LinkedIn Share */}
-          <a
-            href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(cardUrl)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
-            title="Share on LinkedIn"
-          >
-            <Linkedin className="w-5 h-5 text-gray-400" strokeWidth={1.5} />
-          </a>
-
-          {/* Twitter Share (via SMS as fallback) */}
-          <a
-            href={`sms:?body=Check out this nAnoCard: ${cardUrl}`}
-            className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
-            title="Share via SMS"
-          >
-            <MessageCircle className="w-5 h-5 text-gray-400" strokeWidth={1.5} />
-          </a>
-
-          {/* YouTube Link (if videoUrl is present) */}
-          {videoUrl && (
-            <a
-              href={videoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
-              title="Watch on YouTube"
-            >
-              <Youtube className="w-5 h-5 text-gray-400" strokeWidth={1.5} />
-            </a>
-          )}
-
-          {/* GitHub Link (for developer cards) */}
-          {id.startsWith('dev-') && (
-            <a
-              href={`https://github.com/${id.replace('dev-', '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
-              title="View on GitHub"
-            >
-              <Github className="w-5 h-5 text-gray-400" strokeWidth={1.5} />
-            </a>
-          )}
-        </div>
+        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Document">
+          <FileText className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+        </button>
+        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Website">
+          <Globe className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+        </button>
+        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="LinkedIn">
+          <Linkedin className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+        </button>
+        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Discord">
+          <MessageCircle className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+        </button>
+        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="YouTube">
+          <Youtube className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+        </button>
+        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="GitHub">
+          <Github className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+        </button>
+        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Facebook">
+          <Facebook className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+        </button>
       </div>
 
-      {/* Row 2 - Action Buttons */}
+      {/* Row 2 - Share, Camera, Email, Link, Heart (RED), Card# */}
       <div className="px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          {/* Action buttons can be added here if needed */}
-        </div>
-        <div className="flex items-center space-x-2">
-          {/* Card Number and Edit Pencil - Other Corner */}
-          <span className="text-sm font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded">
-            #{cardNumber}
-          </span>
+        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Share">
+          <Share2 className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+        </button>
+        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Camera">
+          <Camera className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+        </button>
+        <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Email">
+          <Mail className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+        </button>
+        <button
+          className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors relative"
+          title={linkCopied ? "Copied" : "Copy Link"}
+          onClick={handleCopyLink}
+        >
+          <LinkIcon className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+        </button>
+
+        {/* Heart - THE ONLY COLORED ICON (red) */}
+        <button
+          onClick={onLike}
+          className="flex items-center gap-2 hover:bg-gray-50 px-2 py-1.5 rounded-lg transition-colors"
+        >
+          <Heart
+            className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : 'text-red-500'}`}
+            strokeWidth={1.5}
+          />
+          <span className="text-gray-900 font-bold text-lg">{likes}</span>
+        </button>
+
+        {/* Card number + edit pencil (ALWAYS VISIBLE) */}
+        <div className="flex flex-col items-center gap-0.5">
+          <span className="text-gray-600 font-semibold text-base">#{cardNumber}</span>
           <button
-            onClick={onEdit}
-            className="text-gray-600 hover:text-gray-800 p-2 rounded hover:bg-gray-50 transition-colors"
+            onClick={onToggleEdit || onEdit || (() => toast.error('You must be logged in to edit cards'))}
+            className="p-0.5 rounded hover:bg-gray-100 transition-colors"
             title="Edit Card"
           >
-            <Edit3 className="w-4 h-4" strokeWidth={1.5} />
+            <Edit3 className="w-4 h-4 text-gray-400" strokeWidth={1.5} />
           </button>
         </div>
       </div>

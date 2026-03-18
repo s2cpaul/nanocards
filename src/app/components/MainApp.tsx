@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { NanoCard } from "../types";
 import { UniversalCard } from "./UniversalCard";
 import { GlobalHeader } from "./GlobalHeader";
+import { supabase, API_BASE_URL, getAuthHeaders, getCurrentSession, initializeAuth } from "../../lib/supabase";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { WelcomeModal } from "./WelcomeModal";
@@ -14,123 +15,379 @@ import { PWAInstallPrompt } from "./PWAInstallPrompt";
  * MainApp - Primary card browsing screen
  *
  * Displays nAnoCards with search, filtering, and card actions.
- * Works in guest mode - no login required.
+ * No login required for browsing (guest mode supported).
  */
 export function MainApp() {
   const navigate = useNavigate();
-  const [currentUserEmail, setCurrentUserEmail] = useState<string>("guest@example.com");
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isGuestMode, setIsGuestMode] = useState(true);
   const [cards, setCards] = useState<NanoCard[]>([]);
-  const [filteredCards, setFilteredCards] = useState<NanoCard[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [cardView, setCardView] = useState<"all" | "my">("all");
+  const [currentUserEmail, setCurrentUserEmail] = useState<string>("");
   const [likedCards, setLikedCards] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const [isGuestMode, setIsGuestMode] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [userPoints, setUserPoints] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+  const [subscriptionTier, setSubscriptionTier] = useState("free");
+  const [showGuestBanner, setShowGuestBanner] = useState(true);
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
 
-  // Initialize in guest mode
-  useEffect(() => {
-    loadCards();
-    loadLikedCards();
-  }, []);
-
-  // Load cards from local storage or use demo cards
   const loadCards = async () => {
     try {
-      setIsLoading(true);
-      setError(null);
+      // PRIORITY: Create Card #001 - The featured nAnoCards introduction card
+      // This is ALWAYS displayed first and is essential for the app experience
+      const featuredCard001: NanoCard = {
+        id: 'nanocards-001',
+        title: 'nAnoCards Overview',
+        videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/nAnoCards-short.mp4',
+        videoTime: '2:30',
+        likes: 1000,
+        createdBy: 'carapaulson1@gmail.com',
+        createdAt: new Date('2024-01-01').toISOString(),
+        information: 'nAnoCards is a progressive web app for creating and sharing AI product pitch cards. This is the featured introduction card visible to all users.',
+        insights: {
+          information: 'Learn about edge computing for micro-learning',
+          officialSite: 'https://nanocards.now',
+        },
+        country: 'USA',
+        stage: 'Growth/Scale',
+        globalCardNumber: '001',
+        isPublic: true,
+        visibility: 'public',
+        qrCodeUrl: '/card/nanocards-001',
+        likedBy: [],
+      };
 
-      // Try to load from localStorage first
-      const savedCards = localStorage.getItem('nanocards_cards');
-      if (savedCards) {
-        const parsedCards = JSON.parse(savedCards);
-        setCards(parsedCards);
-        setFilteredCards(parsedCards);
-      } else {
-        // Use demo cards if no saved cards
-        const demoCards: NanoCard[] = [
-          {
-            id: "demo-1",
-            title: "nAnoCards - Mobile Micro Learning!",
-            objective: "Get started with the simplified offline version",
-            videoTime: "0:30",
-            videoUrl: "https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/WorkforcePromo.mp4",
-            information: "This is a demo card. Create your own cards to get started. This simplified version works entirely offline with local storage - no API keys needed!",
-            likes: 0,
-            createdBy: "demo@example.com",
-            createdAt: new Date().toISOString(),
-            category: "demo",
-            isPublic: true,
-            insights: {}
-          }
-        ];
-        setCards(demoCards);
-        setFilteredCards(demoCards);
-        localStorage.setItem('nanocards_cards', JSON.stringify(demoCards));
+      let cardsArray: NanoCard[] = [featuredCard001]; // START with Card #001
+
+      // Try to load additional cards from API
+      try {
+        const headers = await getAuthHeaders();
+        const response = await fetch(`${API_BASE_URL}/cards`, { headers });
+        const data = await response.json();
+
+        if (response.ok) {
+          const apiCards = (data.cards || []).filter((card: NanoCard) => card.id !== 'nanocards-001');
+          cardsArray = [featuredCard001, ...apiCards];
+        } else {
+          console.warn('API load failed, showing Card #001 only:', data.error);
+        }
+      } catch (error) {
+        console.warn('API fetch failed, showing Card #001 only:', error);
+        // Continue with just Card #001
       }
+
+      // Sort by creation date (oldest first) for consistent numbering
+      const sortedByCreation = cardsArray.sort((a: NanoCard, b: NanoCard) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+
+      // Assign global card numbers
+      const cardsWithNumbers = sortedByCreation.map((card: NanoCard, index: number) => ({
+        ...card,
+        globalCardNumber: String(index + 1).padStart(3, '0'),
+      }));
+
+      setCards(cardsWithNumbers);
     } catch (error) {
       console.error('Error loading cards:', error);
-      setError('Failed to load cards');
+      // Ensure Card #001 is ALWAYS shown, even if everything fails
+      const fallbackCard: NanoCard = {
+        id: 'nanocards-001',
+        title: 'nAnoCards Overview',
+        videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/nAnoCards-short.mp4',
+        videoTime: '2:30',
+        likes: 1000,
+        createdBy: 'carapaulson1@gmail.com',
+        createdAt: new Date('2024-01-01').toISOString(),
+        information: 'nAnoCards is a progressive web app for creating and sharing AI product pitch cards.',
+        insights: {},
+        globalCardNumber: '001',
+        qrCodeUrl: '/card/nanocards-001',
+        likedBy: [],
+      };
+      setCards([fallbackCard]);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  // Load liked cards from localStorage
-  const loadLikedCards = () => {
+  const loadLikedCards = async () => {
     try {
-      const saved = localStorage.getItem('nanocards_liked');
-      if (saved) {
-        setLikedCards(new Set(JSON.parse(saved)));
+      const headers = await getAuthHeaders();
+      const response = await fetch(`${API_BASE_URL}/likes`, { headers });
+      const data = await response.json();
+      if (response.ok) {
+        setLikedCards(new Set(data.likes || []));
       }
     } catch (error) {
-      console.error('Error loading liked cards:', error);
+      console.error('Failed to load liked cards:', error);
     }
   };
 
-  // Filter cards based on search and category
+  const loadUserProfile = async () => {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`${API_BASE_URL}/user/profile`, { headers });
+      const data = await response.json();
+      if (response.ok) {
+        setSubscriptionTier(data.subscriptionTier || 'free');
+        setDisplayName(data.displayName || '');
+        setUserPoints(data.points || 0);
+      }
+    } catch (error) {
+      console.error('Failed to load user profile:', error);
+    }
+  };
+
   useEffect(() => {
-    let filtered = cards;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    if (searchQuery) {
-      filtered = filtered.filter(card =>
-        card.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        card.objective?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        card.information?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+    const urlParams = new URLSearchParams(window.location.search);
+    const devMode = urlParams.get('dev') === 'cara';
+    const viewParam = urlParams.get('view');
+    if (viewParam === 'all' || viewParam === 'my') setCardView(viewParam);
+
+    const points = parseInt(localStorage.getItem('userPoints') || '0');
+    setUserPoints(points);
+
+    if (devMode) {
+      setCurrentUserEmail("carapaulson1@gmail.com");
+      setIsAdmin(true);
+      setIsGuestMode(false);
+      loadCards();
+      loadLikedCards();
+      return;
     }
 
-    if (selectedCategory !== "all") {
-      filtered = filtered.filter(card => card.category === selectedCategory);
-    }
+    let isMounted = true;
+    let hasProcessedAuth = false;
 
-    setFilteredCards(filtered);
-  }, [cards, searchQuery, selectedCategory]);
+    const initAuth = async () => {
+      try {
+        console.log('[MainApp] Starting authentication initialization...');
+        
+        // Check for OAuth callback
+        const isOAuthCallback = window.location.hash &&
+          (window.location.hash.includes('access_token') || window.location.hash.includes('error'));
 
-  const handleLogout = () => {
-    // Logout logic here
-    navigate("/");
-  };
+        if (isOAuthCallback) {
+          console.log('[MainApp] OAuth callback detected, waiting for session...');
+          setLoading(true);
+          localStorage.removeItem('oauthInProgress');
+          // Let the auth state listener handle it
+          return;
+        }
 
-  const handleLikeCard = (cardId: string) => {
-    const newLikedCards = new Set(likedCards);
-    if (newLikedCards.has(cardId)) {
-      newLikedCards.delete(cardId);
+        // Try to restore existing session
+        const session = await getCurrentSession();
+        
+        if (!isMounted) return;
+
+        if (session?.user?.email) {
+          console.log('[MainApp] Session restored for:', session.user.email);
+          const userEmail = session.user.email;
+          setCurrentUserEmail(userEmail);
+          setIsAdmin(userEmail === "carapaulson1@gmail.com");
+          setIsGuestMode(false);
+          hasProcessedAuth = true;
+          localStorage.removeItem('oauthInProgress');
+          
+          // Load user data
+          await Promise.all([
+            loadCards(),
+            loadLikedCards(),
+            loadUserProfile()
+          ]);
+        } else {
+          console.log('[MainApp] No existing session, using guest mode');
+          setIsGuestMode(true);
+          await loadCards();
+        }
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('[MainApp] Error during auth initialization:', error);
+        setIsGuestMode(true);
+        setLoading(false);
+      }
+    };
+
+    // Set up auth state listener for future changes (login/logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!isMounted) return;
+
+        console.log('[MainApp] Auth state change:', event, session?.user?.email);
+
+        if (event === 'SIGNED_IN' && session && !hasProcessedAuth) {
+          hasProcessedAuth = true;
+          localStorage.removeItem('oauthInProgress');
+          const userEmail = session.user.email || "";
+          console.log('[MainApp] User signed in:', userEmail);
+          
+          setCurrentUserEmail(userEmail);
+          setIsAdmin(userEmail === "carapaulson1@gmail.com");
+          setIsGuestMode(false);
+          setLoading(false);
+          
+          await Promise.all([
+            loadCards(),
+            loadLikedCards(),
+            loadUserProfile()
+          ]);
+          
+          // Clean up OAuth hash
+          if (window.location.hash) {
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          console.log('[MainApp] User signed out');
+          localStorage.removeItem('oauthInProgress');
+          hasProcessedAuth = false;
+          setIsGuestMode(true);
+          setCurrentUserEmail('');
+          setDisplayName('');
+          setSubscriptionTier('free');
+          setUserPoints(0);
+          await loadCards();
+        }
+      }
+    );
+
+    // Initialize auth on component mount
+    initAuth();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    if (isGuestMode) {
+      localStorage.removeItem('guestMode');
+      navigate('/');
     } else {
-      newLikedCards.add(cardId);
+      await supabase.auth.signOut();
+      navigate('/');
     }
-    setLikedCards(newLikedCards);
-    localStorage.setItem('nanocards_liked', JSON.stringify([...newLikedCards]));
   };
 
-  if (isLoading) {
+  const handleCreateCard = () => {
+    if (isGuestMode) {
+      toast.error('Account required to create cards', {
+        description: 'Please login to create your own nAnoCards',
+        duration: 4000,
+      });
+      return;
+    }
+    navigate('/create');
+  };
+
+  const handleLike = async (cardId: string) => {
+    if (isGuestMode) {
+      const newLikedCards = new Set(likedCards);
+      if (newLikedCards.has(cardId)) {
+        newLikedCards.delete(cardId);
+      } else {
+        newLikedCards.add(cardId);
+      }
+      setLikedCards(newLikedCards);
+      return;
+    }
+
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`${API_BASE_URL}/cards/${cardId}/like`, {
+        method: 'POST',
+        headers,
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setCards(cards.map(card =>
+          card.id === cardId ? data.card : card
+        ));
+        const newLikedCards = new Set(likedCards);
+        if (data.isLiked) newLikedCards.add(cardId);
+        else newLikedCards.delete(cardId);
+        setLikedCards(newLikedCards);
+      } else {
+        toast.error('Failed to update like');
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      toast.error('Failed to update like');
+    }
+  };
+
+  const handleSaveCard = async (cardId: string, data: { title: string; informationText?: string }) => {
+    try {
+      // Use service role key for direct database access
+      const { data: updateData, error } = await supabase
+        .from('cards')
+        .update({
+          title: data.title,
+          information: data.informationText,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', cardId)
+        .select();
+
+      if (error) {
+        console.error('Error updating card:', error);
+        toast.error('Failed to update card');
+        return;
+      }
+
+      // Update local state
+      setCards(cards.map(card =>
+        card.id === cardId ? { ...card, ...updateData[0] } : card
+      ));
+
+      toast.success('Card updated successfully');
+      setEditingCardId(null);
+    } catch (error) {
+      console.error('Error saving card:', error);
+      toast.error('Failed to save card');
+    }
+  };
+
+  const handleToggleEdit = (cardId: string) => {
+    setEditingCardId(editingCardId === cardId ? null : cardId);
+  };
+
+  // Filter cards - RULE: Card #001 is NEVER filtered out
+  const filteredCards = cards
+    .filter((card: any) => {
+      // RULE: Card #001 is ALWAYS visible to everyone - it can never be filtered out
+      const isCard001 = card.globalCardNumber === '001';
+      if (isCard001) return true; // Card #001 ALWAYS passes through
+      
+      // For all other cards: must match search AND view
+      const matchesSearch = card.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        card.id.includes(searchQuery) ||
+        card.createdBy.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesView = cardView === "all" || card.createdBy === currentUserEmail;
+      
+      return matchesSearch && matchesView;
+    })
+    .sort((a: any, b: any) => {
+      // RULE: Card #001 always appears first
+      if (a.globalCardNumber === '001') return -1;
+      if (b.globalCardNumber === '001') return 1;
+      // Then sort by newest first
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-3 border-gray-200 border-t-[#1e3a8a] rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-500 text-sm">Loading nAnoCards...</p>
+          <p className="text-gray-500 text-sm">Loading cards...</p>
         </div>
       </div>
     );
@@ -140,90 +397,117 @@ export function MainApp() {
     <div className="min-h-screen bg-gray-50">
       <GlobalHeader
         currentUserEmail={currentUserEmail}
-        displayName="Guest User"
+        displayName={displayName}
         isGuestMode={isGuestMode}
-        userPoints={0}
-        subscriptionTier="free"
-        onLogout={() => {}} // No-op in guest mode
+        userPoints={userPoints}
+        subscriptionTier={subscriptionTier}
+        onLogout={handleLogout}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search and Filter Bar */}
-        <div className="mb-8 flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <Input
-                type="text"
-                placeholder="Search cards..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+      <div className="max-w-2xl mx-auto px-2 pt-0 pb-24">
+        {/* Guest Banner */}
+        {isGuestMode && showGuestBanner && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-3 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-[#1e3a8a] flex-shrink-0 mt-0.5" strokeWidth={1.5} />
+            <div className="flex-1">
+              <button
+                onClick={() => navigate('/subscription')}
+                className="text-sm text-[#1e3a8a] hover:text-blue-700 underline font-medium"
+              >
+                View Pricing Tiers
+              </button>
             </div>
           </div>
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Category" />
+        )}
+
+        {/* Search & Filter - Sticky */}
+        <div className="sticky top-[57px] z-40 bg-gray-50 pb-2 -mx-2 px-2 pt-0">
+          <div className="relative mb-3 pt-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" strokeWidth={1.5} />
+            <Input
+              type="text"
+              placeholder="Search by keyword, topic, user, or ID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-9 rounded-lg border-gray-300 bg-white"
+            />
+          </div>
+
+          <Select value={cardView} onValueChange={(value: "all" | "my") => setCardView(value)}>
+            <SelectTrigger className="w-[184px] h-9 rounded-lg border-gray-300 bg-gray-900 text-white text-sm font-medium">
+              <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="demo">Demo</SelectItem>
-              <SelectItem value="business">Business</SelectItem>
-              <SelectItem value="personal">Personal</SelectItem>
+            <SelectContent className="bg-white">
+              <SelectItem value="all">Top nAnoCards</SelectItem>
+              <SelectItem value="my">My nAnoCards</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {/* Cards Grid */}
-        {error ? (
-          <div className="text-center py-12">
-            <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Cards</h3>
-            <p className="text-gray-500">{error}</p>
-          </div>
-        ) : filteredCards.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Plus className="h-12 w-12 text-gray-400" />
+        {/* Cards */}
+        <div className="flex flex-col items-center gap-3">
+          {filteredCards.length === 0 ? (
+            <div className="text-center py-12 text-gray-500 text-sm">
+              No cards found. {searchQuery ? "Try adjusting your search." : "Create your first nAnoCard."}
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No cards found</h3>
-            <p className="text-gray-500">
-              {searchQuery || selectedCategory !== "all"
-                ? "Try adjusting your search or filter criteria."
-                : "Create your first card to get started!"}
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCards.map((card) => (
-              <UniversalCard
-                key={card.id}
-                id={card.id}
-                title={card.title}
-                videoUrl={card.videoUrl}
-                videoTime={card.videoTime}
-                likes={card.likes}
-                isLiked={likedCards.has(card.id)}
-                onLike={() => handleLikeCard(card.id)}
-                cardNumber={card.globalCardNumber || card.id}
-                informationText={card.information}
-                thumbnail={card.thumbnailUrl}
-                qrCodeUrl={card.qrCodeUrl}
-                onEdit={() => navigate(`/edit-card?cardId=${card.id}`)}
-              />
-            ))}
-          </div>
-        )}
+          ) : (
+            filteredCards.map((card: any) => {
+              const isOwner = !isGuestMode && (currentUserEmail === "carapaulson1@gmail.com" || card.createdBy === currentUserEmail);
+              
+              // DEBUG: Log edit permissions
+              if (card.id !== 'featured-001') {
+                console.log(`MainApp - Card ${card.id}: createdBy="${card.createdBy}", userEmail="${currentUserEmail}", isOwner=${isOwner}`);
+              }
+              
+              return (
+                <UniversalCard
+                  key={card.id}
+                  id={card.id}
+                  title={card.title}
+                  videoUrl={card.videoUrl}
+                  videoTime={card.videoTime}
+                  likes={card.likes}
+                  isLiked={likedCards.has(card.id)}
+                  onLike={() => handleLike(card.id)}
+                  cardNumber={card.globalCardNumber}
+                  informationText={card.information || card.insights?.information}
+                  onSave={(data) => handleSaveCard(card.id, data)}
+                  isEditing={editingCardId === card.id}
+                  onToggleEdit={() => handleToggleEdit(card.id)}
+                  thumbnail={card.thumbnail}
+                  qrCodeUrl={card.qrCodeUrl}
+                />
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* Floating Create Button */}
+      <div className="fixed bottom-2.5 right-2.5">
+        <button
+          onClick={handleCreateCard}
+          className="w-12 h-12 bg-[#1e3a8a] hover:bg-blue-800 text-white rounded-full shadow-lg flex items-center justify-center opacity-40 hover:opacity-60 transition-opacity"
+        >
+          <Plus className="w-6 h-6" strokeWidth={1.5} />
+        </button>
       </div>
 
       <WelcomeModal
         isOpen={showWelcomeModal}
         onClose={() => setShowWelcomeModal(false)}
-        onGetStarted={() => setShowWelcomeModal(false)}
+        onGetStarted={() => {
+          setShowWelcomeModal(false);
+          navigate('/instructions');
+        }}
       />
 
       <PWAInstallPrompt />
+
+      {/* Dev Link */}
+      <div className="fixed bottom-1 left-1/2 transform -translate-x-1/2 z-10">
+        <a href="/app?dev=cara" className="text-[10px] text-gray-300 hover:text-gray-500 underline">dev</a>
+      </div>
     </div>
   );
 }

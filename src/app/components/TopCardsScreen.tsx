@@ -26,6 +26,7 @@ export function TopCardsScreen() {
   const [displayName, setDisplayName] = useState("");
   const [userPoints, setUserPoints] = useState(0);
   const [subscriptionTier, setSubscriptionTier] = useState("free");
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -83,7 +84,7 @@ export function TopCardsScreen() {
       const featuredCard: any = {
         id: 'featured-001',
         title: 'nAnoCards Overview',
-        videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
+        videoUrl: 'https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
         videoTime: '2:30',
         likes: 1000,
         createdBy: 'carapaulson1@gmail.com', // Created by Cara - so she can edit it
@@ -132,7 +133,7 @@ export function TopCardsScreen() {
       const featuredCard: any = {
         id: 'featured-001',
         title: 'nAnoCards Overview',
-        videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
+        videoUrl: 'https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
         videoTime: '2:30',
         likes: 1000,
         createdBy: 'carapaulson1@gmail.com', // Created by Cara - so she can edit it
@@ -185,6 +186,42 @@ export function TopCardsScreen() {
         )
       );
     }
+  };
+
+  const handleSaveCard = async (cardId: string, data: { title: string; informationText?: string }) => {
+    try {
+      // Use service role key for direct database access
+      const { data: updateData, error } = await supabase
+        .from('cards')
+        .update({
+          title: data.title,
+          information: data.informationText,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', cardId)
+        .select();
+
+      if (error) {
+        console.error('Error updating card:', error);
+        toast.error('Failed to update card');
+        return;
+      }
+
+      // Update local state
+      setCards(cards.map(card =>
+        card.id === cardId ? { ...card, ...updateData[0] } : card
+      ));
+
+      toast.success('Card updated successfully');
+      setEditingCardId(null);
+    } catch (error) {
+      console.error('Error saving card:', error);
+      toast.error('Failed to save card');
+    }
+  };
+
+  const handleToggleEdit = (cardId: string) => {
+    setEditingCardId(editingCardId === cardId ? null : cardId);
   };
 
   // Filter by search
@@ -276,7 +313,9 @@ export function TopCardsScreen() {
                     informationText={card.information || card.insights?.information}
                     thumbnail={card.thumbnail || card.insights?.thumbnail}
                     qrCodeUrl={card.qrCodeUrl}
-                    onEdit={() => canEdit ? navigate(`/edit-card?cardId=${card.id}`) : null}
+                    onSave={(data) => handleSaveCard(card.id, data)}
+                    isEditing={editingCardId === card.id}
+                    onToggleEdit={() => handleToggleEdit(card.id)}
                   />
                 );
               })
