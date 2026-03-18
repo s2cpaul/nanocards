@@ -59,7 +59,7 @@ app.get("/make-server-d91f8206/health", (c) => {
 // Get all cards
 app.get("/make-server-d91f8206/cards", async (c) => {
   try {
-    const cards = await kv.getByPrefix "card:";
+    const cards = await kv.getByPrefix('card:');
     return c.json({ cards: cards || [] });
   } catch (error) {
     console.error("Error fetching cards:", error);
@@ -383,7 +383,7 @@ app.get("/make-server-d91f8206/cards/liked", async (c) => {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const allCards = await kv.getByPrefix "card:";
+    const allCards = await kv.getByPrefix('card:');
     const likedCards = allCards.filter(card => 
       card.likedBy && card.likedBy.includes(user.id)
     ).map(card => card.id);

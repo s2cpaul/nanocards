@@ -79,19 +79,23 @@ export function TopCardsScreen() {
   const loadCards = async () => {
     setIsLoading(true);
     try {
-      // NO FEATURED CARD - Top cards section is now empty
-      // Previously showed "nAnoCards Overview" card #001, but it has been removed
-      const cardsArray: NanoCard[] = [];
+      // Fetch cards from the edge function (or anon if not logged in)
+      const headers = await getAuthHeaders();
+      const response = await fetch(`${API_BASE_URL}/cards`, { headers });
 
-      // Sort by creation date (oldest first) to assign consistent card numbers
-      const sortedByCreation = cardsArray.sort((a: NanoCard, b: NanoCard) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
+      if (!response.ok) {
+        console.error('Failed to load cards from server', response.status);
+        setCards([]);
+        return;
+      }
 
-      // Assign global card numbers
-      const cardsWithNumbers = sortedByCreation.map((card: NanoCard, index: number) => ({
+      const data = await response.json();
+      const allCards: NanoCard[] = data.cards || [];
+
+      // Ensure each card uses the server-assigned ID as the global card number
+      const cardsWithNumbers = allCards.map((card: any) => ({
         ...card,
-        globalCardNumber: String(index + 1).padStart(3, "0"),
+        globalCardNumber: card.globalCardNumber || card.id,
       }));
 
       // Sort by likes for display
@@ -99,7 +103,6 @@ export function TopCardsScreen() {
       setCards(sortedByLikes);
     } catch (error) {
       console.error("Error loading cards:", error);
-      // FALLBACK: Show empty array - no cards
       setCards([]);
     } finally {
       setIsLoading(false);

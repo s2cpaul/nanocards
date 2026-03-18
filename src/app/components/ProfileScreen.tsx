@@ -134,15 +134,10 @@ export function ProfileScreen() {
         const data = await response.json();
         const allCards = data.cards || [];
         
-        // Sort all cards by createdAt (oldest first) to get consistent global numbering
-        const sortedByCreation = allCards.sort((a: NanoCard, b: NanoCard) => 
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-        
-        // Assign global card numbers based on creation order
-        const cardsWithNumbers = sortedByCreation.map((card: NanoCard, index: number) => ({
+        // Use server-provided globalCardNumber or fallback to id
+        const cardsWithNumbers = allCards.map((card: NanoCard) => ({
           ...card,
-          globalCardNumber: String(index + 1).padStart(3, '0')
+          globalCardNumber: card.globalCardNumber || card.id
         }));
         
         // Filter to only show user's own cards

@@ -36,30 +36,28 @@ export function MainApp() {
 
   const loadCards = async () => {
     try {
-      // Create featured card #001 - ONLY CARD SHOWN IN MAIN APP
-      // This is the primary introduction card for nAnoCards
-      const featuredCard: NanoCard = {
-        id: 'featured-001',
-        title: 'nAnoCards Overview',
-        videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/nAnoCards-short.mp4',
-        videoTime: '2:30',
-        likes: 1000,
-        createdBy: 'carapaulson1@gmail.com', // Created by Cara - so she can edit it
-        createdAt: new Date(0).toISOString(), // Very old date so it sorts to top
-        information: 'Watch this quick demo to learn how to create and share your nano learning cards with the world.',
-        insights: {},
-        globalCardNumber: '001',
-        isPublic: true, // Explicitly public - viewable by all
-        visibility: 'public', // Public visibility
-      };
+      // Fetch cards from backend
+      const headers = await getAuthHeaders();
+      const response = await fetch(`${API_BASE_URL}/cards`, { headers });
 
-      // ONLY SHOW THE FEATURED CARD - NO OTHER CARDS
-      const cardsArray = [featuredCard];
+      if (!response.ok) {
+        console.error('Failed to load cards from server', response.status);
+        setCards([]);
+        return;
+      }
 
-      setCards(cardsArray);
+      const data = await response.json();
+      const allCards: NanoCard[] = data.cards || [];
+
+      // Ensure each card uses the server-assigned ID as the global card number
+      const cardsWithNumbers = allCards.map((card: any) => ({
+        ...card,
+        globalCardNumber: card.globalCardNumber || card.id,
+      }));
+
+      setCards(cardsWithNumbers);
     } catch (error) {
       console.error('Error loading cards:', error);
-      // FALLBACK: Show empty array - no cards
       setCards([]);
     } finally {
       setLoading(false);

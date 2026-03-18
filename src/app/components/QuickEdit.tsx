@@ -60,7 +60,7 @@ export function QuickEdit() {
         if (response.ok) {
           const data = await response.json();
           // Filter to only show user's own cards (exclude protected card #000)
-          const userCards = data.cards.filter((card: NanoCard) => 
+          const userCards = (data.cards || []).filter((card: NanoCard) => 
             card.createdBy === session.user.email && card.id !== "000"
           );
           setCards(userCards);
