@@ -1,17 +1,24 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "./ui/button";
-import { supabase, getCurrentSession } from "../../lib/supabase";
+import { useAuth } from "../../lib/auth";
 import { toast } from "sonner";
 import { Mail, Lock, User, Loader2, ArrowLeft } from "lucide-react";
 
 export function SignupScreen() {
   const navigate = useNavigate();
+  const { signup, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect if already logged in
+  if (user) {
+    navigate("/app", { replace: true });
+    return null;
+  }
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,86 +38,13 @@ export function SignupScreen() {
 
     setIsLoading(true);
     try {
-      console.log('[SignupScreen] Creating account for:', email);
-      
-      // URGENT FIX: Use Supabase Auth directly instead of API endpoint
-      // The API endpoint doesn't exist yet, so we bypass it
-      const { data: signupData, error: signupError } = await supabase.auth.signUp({
-        email: email.toLowerCase().trim(),
-        password,
-        options: {
-          data: {
-            display_name: displayName || email.split("@")[0],
-          },
-          emailRedirectTo: undefined, // Auto-confirm, no email needed
-        },
-      });
-
-      if (signupError) {
-        console.error("[SignupScreen] Signup error:", signupError.message);
-        
-        // Map error messages to user-friendly ones
-        let errorMessage = signupError.message || "Failed to create account";
-        
-        // If account already exists
-        if (errorMessage.toLowerCase().includes('already registered') || 
-            errorMessage.toLowerCase().includes('user already exists')) {
-          console.log('[SignupScreen] Account already exists, redirecting to login');
-          toast.success("Account already exists. Redirecting to login...");
-          setTimeout(() => navigate("/login", { replace: true }), 1000);
-          setIsLoading(false);
-          return;
-        }
-        
-        toast.error(errorMessage);
-        setIsLoading(false);
-        return;
+      const success = await signup(email, password, displayName);
+      if (success) {
+        navigate("/app", { replace: true });
       }
-
-      if (signupData.user) {
-        console.log('[SignupScreen] Account created successfully, attempting auto-login');
-        
-        // Auto-login the user immediately after signup
-        try {
-          const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-            email: email.toLowerCase().trim(),
-            password,
-          });
-
-          if (loginError) {
-            console.error('[SignupScreen] Auto-login failed:', loginError);
-            toast.error("Account created! Please log in manually with your credentials.");
-            setTimeout(() => navigate("/login", { replace: true }), 1000);
-            return;
-          }
-
-          if (loginData.session) {
-            console.log('[SignupScreen] Auto-login successful for:', email);
-            // Clear guest mode flag
-            localStorage.removeItem('guestMode');
-            localStorage.removeItem('guestVisits');
-            
-            toast.success(`Welcome, ${email.split('@')[0]}!`);
-            // Redirect with replace to prevent back button going to signup
-            navigate("/app", { replace: true });
-          } else {
-            console.error('[SignupScreen] Login completed but no session');
-            toast.error("Account created! Please log in manually.");
-            navigate("/login", { replace: true });
-          }
-        } catch (autoLoginError: any) {
-          console.error('[SignupScreen] Unexpected auto-login error:', autoLoginError);
-          toast.error("Account created! Please log in manually with your credentials.");
-          setTimeout(() => navigate("/login", { replace: true }), 1000);
-        }
-      } else {
-        console.error('[SignupScreen] Signup response missing user data');
-        toast.error("Failed to create account - please try again");
-        setIsLoading(false);
-      }
-    } catch (error: any) {
-      console.error("[SignupScreen] Unexpected error:", error);
-      toast.error(error.message || "Failed to create account");
+    } catch (error) {
+      console.error("Signup error:", error);
+    } finally {
       setIsLoading(false);
     }
   };
