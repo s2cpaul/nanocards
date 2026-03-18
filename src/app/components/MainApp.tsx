@@ -31,7 +31,7 @@ export function MainApp() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [subscriptionTier, setSubscriptionTier] = useState("free");
-  const [showGuestBanner, setShowGuestBanner] = useState(true);
+  const [showGuestBanner, setShowGuestBanner] = useState(false);
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
 
   const loadCards = async () => {
