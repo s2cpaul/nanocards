@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import {
   ArrowLeft,
@@ -111,6 +111,26 @@ export function TrainingScreen() {
     duration: "",
     category: "Applied AI Leadership" as "Applied AI Leadership" | "Customer Service Training" | "nAnoCards Academy"
   });
+
+  // Video refs for each module
+  const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
+
+  const handlePlayVideo = async (moduleId: string) => {
+    const videoElement = videoRefs.current[moduleId];
+    if (videoElement) {
+      try {
+        await videoElement.play();
+        setPlayingVideo(moduleId);
+      } catch (error) {
+        console.error('Failed to play video:', error);
+        toast.error('Failed to play video');
+      }
+    }
+  };
+
+  const handleVideoEnded = (moduleId: string) => {
+    setPlayingVideo(null);
+  };
 
   useEffect(() => {
     checkAccess();
@@ -872,10 +892,12 @@ export function TrainingScreen() {
                       <>
                         {/* Actual video element showing first frame (like NanoCard) */}
                         <video
+                          ref={(el) => { videoRefs.current[module.id] = el; }}
                           className="absolute inset-0 w-full h-full object-cover"
                           src={`${module.videoUrl}#t=0.1`}
                           preload="metadata"
                           playsInline
+                          onEnded={() => handleVideoEnded(module.id)}
                           onError={() => {
                             console.error('Video load error for training card:', module.id, module.videoUrl);
                           }}
@@ -885,32 +907,31 @@ export function TrainingScreen() {
                         />
                         
                         {/* Play overlay button */}
-                        <button
-                          onClick={() => {
-                            // Video play handler - can be implemented later
-                            console.log('Play video:', module.videoUrl);
-                          }}
-                          className="absolute inset-0 flex items-center justify-center hover:bg-black/5 transition-colors cursor-pointer"
-                          aria-label="Play video"
-                        >
-                          <svg width="39" height="31.2" viewBox="0 0 54 43.2" className="drop-shadow-md">
-                            <defs>
-                              <linearGradient id="playGradientTraining" x1="0%" y1="0%" x2="0%" y2="100%">
-                                <stop offset="0%" style={{ stopColor: '#1e3a8a', stopOpacity: 1 }} />
-                                <stop offset="100%" style={{ stopColor: '#0a0a0a', stopOpacity: 1 }} />
-                              </linearGradient>
-                              {/* Mask for cut-out triangle effect */}
-                              <mask id="playMaskTraining">
-                                {/* White area = visible, Black area = transparent/cut-out */}
-                                <rect width="54" height="43.2" fill="white" />
-                                {/* Equilateral triangle cut-out - scaled down 10% */}
-                                <path d="M 23.22 15.3 L 23.22 27.9 L 34.56 21.6 Z" fill="black" />
-                              </mask>
-                            </defs>
-                            {/* Rounded rectangle with top and bottom indented at center - scaled down 10% */}
-                            <path d="M 12.42 7.2 Q 9.18 7.2 9.18 10.8 L 9.18 32.4 Q 9.18 36 12.42 36 L 23.76 36 Q 27 32.4 30.24 36 L 41.58 36 Q 44.82 36 44.82 32.4 L 44.82 10.8 Q 44.82 7.2 41.58 7.2 L 30.24 7.2 Q 27 10.8 23.76 7.2 Z" fill="url(#playGradientTraining)" mask="url(#playMaskTraining)" />
-                          </svg>
-                        </button>
+                        {playingVideo !== module.id && (
+                          <button
+                            onClick={() => handlePlayVideo(module.id)}
+                            className="absolute inset-0 flex items-center justify-center hover:bg-black/5 transition-colors cursor-pointer"
+                            aria-label="Play video"
+                          >
+                            <svg width="39" height="31.2" viewBox="0 0 54 43.2" className="drop-shadow-md">
+                              <defs>
+                                <linearGradient id={`playGradientTraining-${module.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                                  <stop offset="0%" style={{ stopColor: '#1e3a8a', stopOpacity: 1 }} />
+                                  <stop offset="100%" style={{ stopColor: '#0a0a0a', stopOpacity: 1 }} />
+                                </linearGradient>
+                                {/* Mask for cut-out triangle effect */}
+                                <mask id={`playMaskTraining-${module.id}`}>
+                                  {/* White area = visible, Black area = transparent/cut-out */}
+                                  <rect width="54" height="43.2" fill="white" />
+                                  {/* Equilateral triangle cut-out - scaled down 10% */}
+                                  <path d="M 23.22 15.3 L 23.22 27.9 L 34.56 21.6 Z" fill="black" />
+                                </mask>
+                              </defs>
+                              {/* Rounded rectangle with top and bottom indented at center - scaled down 10% */}
+                              <path d="M 12.42 7.2 Q 9.18 7.2 9.18 10.8 L 9.18 32.4 Q 9.18 36 12.42 36 L 23.76 36 Q 27 32.4 30.24 36 L 41.58 36 Q 44.82 36 44.82 32.4 L 44.82 10.8 Q 44.82 7.2 41.58 7.2 L 30.24 7.2 Q 27 10.8 23.76 7.2 Z" fill={`url(#playGradientTraining-${module.id})`} mask={`url(#playMaskTraining-${module.id})`} />
+                            </svg>
+                          </button>
+                        )}
                       </>
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-50">
