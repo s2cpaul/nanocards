@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { projectId, publicAnonKey } from '/utils/supabase/info';
+import { projectId, publicAnonKey } from '../../lib/supabase';
 
 export function AdminCreateAccount() {
   const [accountType, setAccountType] = useState<'individual' | 'organization'>('individual');

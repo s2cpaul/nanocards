@@ -4,8 +4,8 @@ import { supabaseConfig } from '../config/supabase.config';
 
 // Get Supabase credentials from environment variables
 // Fallback to embedded config if env vars not available (for Vercel production builds)
-const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || supabaseConfig.projectId;
-const publicAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || supabaseConfig.anonKey;
+export const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || supabaseConfig.projectId;
+export const publicAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || supabaseConfig.anonKey;
 
 // Validate that credentials are available
 if (!projectId || !publicAnonKey) {
