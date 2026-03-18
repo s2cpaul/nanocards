@@ -79,25 +79,9 @@ export function TopCardsScreen() {
   const loadCards = async () => {
     setIsLoading(true);
     try {
-      // Create featured card #001 - ONLY CARD SHOWN IN TOP CARDS
-      // This is the primary introduction card for nAnoCards
-      const featuredCard: any = {
-        id: 'featured-001',
-        title: 'nAnoCards Overview',
-        videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/nAnoCards-short.mp4',
-        videoTime: '2:30',
-        likes: 1000,
-        createdBy: 'carapaulson1@gmail.com', // Created by Cara - so she can edit it
-        createdAt: new Date(0).toISOString(), // Very old date so it sorts to top
-        information: 'Watch this quick demo to learn how to create and share your nano learning cards with the world.',
-        insights: {},
-        globalCardNumber: '001',
-        isPublic: true, // Explicitly public - viewable by all
-        visibility: 'public', // Public visibility
-      };
-
-      // ONLY SHOW THE FEATURED CARD - NO OTHER CARDS
-      const cardsArray = [featuredCard];
+      // NO FEATURED CARD - Top cards section is now empty
+      // Previously showed "nAnoCards Overview" card #001, but it has been removed
+      const cardsArray: NanoCard[] = [];
 
       // Sort by creation date (oldest first) to assign consistent card numbers
       const sortedByCreation = cardsArray.sort((a: NanoCard, b: NanoCard) =>
@@ -115,22 +99,8 @@ export function TopCardsScreen() {
       setCards(sortedByLikes);
     } catch (error) {
       console.error("Error loading cards:", error);
-      // FALLBACK: Show at least the featured card
-      const featuredCard: any = {
-        id: 'featured-001',
-        title: 'nAnoCards Overview',
-        videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/nAnoCards-short.mp4',
-        videoTime: '2:30',
-        likes: 1000,
-        createdBy: 'carapaulson1@gmail.com', // Created by Cara - so she can edit it
-        createdAt: new Date(0).toISOString(),
-        information: 'Watch this quick demo to learn how to create and share your nano learning cards with the world.',
-        insights: {},
-        globalCardNumber: '001',
-        isPublic: true,
-        visibility: 'public',
-      };
-      setCards([featuredCard]);
+      // FALLBACK: Show empty array - no cards
+      setCards([]);
     } finally {
       setIsLoading(false);
     }

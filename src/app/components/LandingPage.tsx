@@ -29,19 +29,19 @@ export function LandingPage() {
       <div className="flex justify-center pt-4 pb-6">
         <div className="inline-flex items-center gap-2 bg-gray-100 rounded-full p-1.5">
           <button
-            className="px-6 py-3 rounded-full text-sm font-semibold bg-gray-800 text-white transition-all"
+            className="px-8 py-3 rounded-full text-sm font-semibold bg-[#1e3a8a] text-white transition-all"
           >
             Welcome
           </button>
           <button
             onClick={() => navigate("/subscription")}
-            className="px-6 py-3 rounded-full text-sm font-semibold text-gray-600 hover:text-gray-900 transition-all"
+            className="px-8 py-3 rounded-full text-sm font-semibold text-gray-600 hover:text-gray-900 transition-all"
           >
             Pricing
           </button>
           <button
             onClick={() => navigate("/app")}
-            className="px-6 py-3 rounded-full text-sm font-semibold text-gray-600 hover:text-gray-900 transition-all"
+            className="px-8 py-3 rounded-full text-sm font-semibold text-gray-600 hover:text-gray-900 transition-all"
           >
             Cards
           </button>
@@ -89,7 +89,7 @@ export function LandingPage() {
               </div>
 
               {/* Content */}
-              <div className="flex flex-col items-center justify-start h-full px-6 pt-24">
+              <div className="flex flex-col items-center justify-start h-full px-8 pt-24">
                 
                 {/* Logo */}
                 <div className="mb-8">
@@ -114,12 +114,6 @@ export function LandingPage() {
                 >
                   LOOK AROUND
                 </button>
-
-                {/* Additional Text */}
-                <p className="text-base text-gray-300 text-center mt-6 leading-relaxed">
-                  Evidence-based Learning!<br />
-                  Applied AI Leadership
-                </p>
               </div>
 
               {/* Home Indicator */}
