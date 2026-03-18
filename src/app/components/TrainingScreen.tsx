@@ -212,16 +212,16 @@ export function TrainingScreen() {
         if (apiModules.length === 0) {
           const defaultModule: TrainingModule = {
             id: 'training:001',
-            title: 'Getting Started with nAnoCards',
-            description: 'Learn the basics of creating and sharing nano learning cards',
-            content: 'Welcome to nAnoCards! This training module will walk you through the fundamentals of creating effective micro-learning content using our platform. Watch the video to understand how to create impactful nano learning cards.',
-            videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/nAnoCards-short.mp4',
+            title: 'Workforce AI Literacy',
+            description: 'Master the fundamentals of AI in the modern workforce',
+            content: 'This comprehensive training module covers essential AI literacy skills for today\'s workforce. Learn how to effectively use AI tools, understand AI ethics, and apply AI concepts in professional settings. Watch the video to understand the key principles of AI literacy in the workplace.',
+            videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/WorkforcePromo.mp4',
             duration: '2:30',
             order: 1,
-            category: 'nAnoCards Academy',
+            category: 'Applied AI Leadership',
             createdAt: new Date().toISOString(),
             createdBy: 'carapaulson1@gmail.com',
-            information: 'Master the art of micro-learning with nAnoCards'
+            information: 'Essential AI literacy training for modern workforce development'
           };
           setModules([defaultModule]);
         } else {
@@ -232,16 +232,16 @@ export function TrainingScreen() {
         // Add default module if API fails
         const defaultModule: TrainingModule = {
           id: 'training:001',
-          title: 'Getting Started with nAnoCards',
-          description: 'Learn the basics of creating and sharing nano learning cards',
-          content: 'Welcome to nAnoCards! This training module will walk you through the fundamentals of creating effective micro-learning content using our platform. Watch the video to understand how to create impactful nano learning cards.',
-          videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/nAnoCards-short.mp4',
+          title: 'Workforce AI Literacy',
+          description: 'Master the fundamentals of AI in the modern workforce',
+          content: 'This comprehensive training module covers essential AI literacy skills for today\'s workforce. Learn how to effectively use AI tools, understand AI ethics, and apply AI concepts in professional settings. Watch the video to understand the key principles of AI literacy in the workplace.',
+          videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/WorkforcePromo.mp4',
           duration: '2:30',
           order: 1,
-          category: 'nAnoCards Academy',
+          category: 'Applied AI Leadership',
           createdAt: new Date().toISOString(),
           createdBy: 'carapaulson1@gmail.com',
-          information: 'Master the art of micro-learning with nAnoCards'
+          information: 'Essential AI literacy training for modern workforce development'
         };
         setModules([defaultModule]);
       }
@@ -250,16 +250,16 @@ export function TrainingScreen() {
       // Add default module if network error
       const defaultModule: TrainingModule = {
         id: 'training:001',
-        title: 'Getting Started with nAnoCards',
-        description: 'Learn the basics of creating and sharing nano learning cards',
-        content: 'Welcome to nAnoCards! This training module will walk you through the fundamentals of creating effective micro-learning content using our platform. Watch the video to understand how to create impactful nano learning cards.',
-        videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/nAnoCards-short.mp4',
+        title: 'Workforce AI Literacy',
+        description: 'Master the fundamentals of AI in the modern workforce',
+        content: 'This comprehensive training module covers essential AI literacy skills for today\'s workforce. Learn how to effectively use AI tools, understand AI ethics, and apply AI concepts in professional settings. Watch the video to understand the key principles of AI literacy in the workplace.',
+        videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/WorkforcePromo.mp4',
         duration: '2:30',
         order: 1,
-        category: 'nAnoCards Academy',
+        category: 'Applied AI Leadership',
         createdAt: new Date().toISOString(),
         createdBy: 'carapaulson1@gmail.com',
-        information: 'Master the art of micro-learning with nAnoCards'
+        information: 'Essential AI literacy training for modern workforce development'
       };
       setModules([defaultModule]);
     }
