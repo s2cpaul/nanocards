@@ -122,6 +122,18 @@ export function SignupScreen() {
             localStorage.removeItem('guestMode');
             localStorage.removeItem('guestVisits');
             
+            // If the user did NOT choose to keep signed in, sign them out when the tab/window closes
+            if (!keepSignedIn) {
+              const signOutOnClose = async () => {
+                try {
+                  await supabase.auth.signOut();
+                } catch (e) {
+                  console.error('Error signing out on close:', e);
+                }
+              };
+              window.addEventListener('beforeunload', signOutOnClose);
+            }
+            
             toast.success(`Welcome, ${email.split('@')[0]}!`);
             // Redirect with replace to prevent back button going to signup
             navigate("/app", { replace: true });
