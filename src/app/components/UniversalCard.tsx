@@ -164,7 +164,7 @@ export function UniversalCard({
         ) : videoUrl ? (
           <video
             ref={videoRef}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover z-0"
             src={`${videoUrl}#t=0.1`}
             preload="metadata"
             playsInline
@@ -177,11 +177,11 @@ export function UniversalCard({
         {/* Play Button */}
         {!isVideoPlaying && (
           <button
-            className="absolute inset-0 flex items-center justify-center"
+            className="absolute inset-0 flex items-center justify-center z-20"
             onClick={handlePlayVideo}
             aria-label="Play video"
           >
-            <div className="w-14 h-14 bg-[#1e3a8a]/90 rounded-full flex items-center justify-center shadow-lg">
+            <div className="w-14 h-14 bg-[#1e3a8a]/90 rounded-full flex items-center justify-center shadow-lg z-20">
               <div className="w-0 h-0 border-l-[16px] border-l-white border-t-[11px] border-t-transparent border-b-[11px] border-b-transparent ml-1" />
             </div>
           </button>
@@ -258,7 +258,7 @@ export function UniversalCard({
               toast.error('Failed to generate PDF');
             }
           }}
-          className="absolute top-3 right-3 bg-white rounded-xl p-2 shadow-lg hover:bg-gray-50 transition-colors"
+          className="absolute top-3 right-3 bg-white rounded-xl p-2 shadow-lg hover:bg-gray-50 transition-colors z-30"
           title="Download PDF with QR Code"
         >
           <QRCodeSVG value={cardUrl} size={80} level="M" includeMargin={false} />
@@ -319,7 +319,7 @@ export function UniversalCard({
               toast.error('Failed to generate PDF');
             }
           }}
-          className="absolute top-[108px] right-3 bg-white rounded-xl p-2.5 shadow-lg hover:bg-gray-50 transition-colors"
+          className="absolute top-[108px] right-3 bg-white rounded-xl p-2.5 shadow-lg hover:bg-gray-50 transition-colors z-30"
           title="Download PDF with QR Code"
         >
           <Download className="w-6 h-6 text-gray-600" strokeWidth={1.5} />
@@ -327,7 +327,7 @@ export function UniversalCard({
 
         {/* Duration - Bottom Right */}
         {videoTime && (
-          <div className="absolute bottom-3 right-3 bg-black/80 text-white px-3 py-1.5 rounded-lg text-base font-bold">
+          <div className="absolute bottom-3 right-3 bg-black/80 text-white px-3 py-1.5 rounded-lg text-base font-bold z-30">
             {videoTime}
           </div>
         )}

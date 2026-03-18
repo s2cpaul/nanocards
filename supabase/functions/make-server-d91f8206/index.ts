@@ -59,7 +59,7 @@ app.get("/make-server-d91f8206/health", (c) => {
 // Get all cards
 app.get("/make-server-d91f8206/cards", async (c) => {
   try {
-    const cards = await kv.getByPrefix("card:");
+    const cards = await kv.getByPrefix "card:";
     return c.json({ cards: cards || [] });
   } catch (error) {
     console.error("Error fetching cards:", error);
@@ -156,11 +156,9 @@ app.post("/make-server-d91f8206/cards", async (c) => {
     const orgPrefix = userProfile?.orgPrefix || null;
 
     // Generate unique sequential card ID using a persistent counter.
-    // This counter only increments and never reuses IDs, even if cards are deleted.
-    let cardCounter = await kv.get("system:cardCounter") || 0;
-    cardCounter = cardCounter + 1;
-    await kv.set("system:cardCounter", cardCounter);
-    const newId = String(cardCounter).padStart(3, '0');
+    // Use atomic increment helper provided by kv to avoid race conditions.
+    const incremented = await kv.increment('system:cardCounter');
+    const newId = String(incremented).padStart(3, '0');
 
     // Deep link URL for QR code sharing - each card gets a unique, permanent URL
     // Uses appOrigin sent by the frontend (window.location.origin) for reliability
@@ -385,7 +383,7 @@ app.get("/make-server-d91f8206/cards/liked", async (c) => {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const allCards = await kv.getByPrefix("card:");
+    const allCards = await kv.getByPrefix "card:";
     const likedCards = allCards.filter(card => 
       card.likedBy && card.likedBy.includes(user.id)
     ).map(card => card.id);
@@ -712,7 +710,7 @@ app.post("/make-server-d91f8206/training/modules", async (c) => {
     }
 
     // Generate module ID
-    const existingModules = await kv.getByPrefix("training:");
+    const existingModules = await kv.getByPrefix "training:";
     const moduleCount = (existingModules || []).length;
     const moduleId = `training:${String(moduleCount + 1).padStart(3, "0")}`;
 
@@ -1698,7 +1696,7 @@ app.post("/make-server-d91f8206/admin/create-account", async (c) => {
       tier: 'free',
       createdAt: new Date().toISOString(),
       passwordChangeRequired: true,
-      passwordChangeRecommendedBy: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      passwordChangeRecommendedBy: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
     });
 
     console.log(`[POST /admin/create-account] Account created successfully for ${email}`);
@@ -1969,7 +1967,7 @@ app.get("/make-server-d91f8206/courses/titles", async (c) => {
       cards = await kv.getByPrefix(`card:${orgId}:`);
     } else {
       // Get all cards created by this user
-      const allCards = await kv.getByPrefix("card:");
+      const allCards = await kv.getByPrefix "card:";
       cards = allCards.filter(card => card.createdBy === user.email);
     }
 
@@ -2008,7 +2006,7 @@ app.post("/make-server-d91f8206/admin/init-featured-card", async (c) => {
     console.log("[INIT] Starting database initialization - deleting all cards and creating featured card #000");
 
     // Step 1: Delete ALL existing cards
-    const allCards = await kv.getByPrefix("card:");
+    const allCards = await kv.getByPrefix "card:";
     console.log(`[INIT] Found ${allCards?.length || 0} cards to delete`);
     
     if (allCards && allCards.length > 0) {

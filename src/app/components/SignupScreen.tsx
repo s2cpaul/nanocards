@@ -65,93 +65,80 @@ export function SignupScreen() {
     try {
       console.log('[SignupScreen] Creating account for:', email);
       
-      // URGENT FIX: Use Supabase Auth directly instead of API endpoint
-      // The API endpoint doesn't exist yet, so we bypass it
+      // Use Supabase Auth signUp directly. Email confirmation may be required
       const { data: signupData, error: signupError } = await supabase.auth.signUp({
         email: email.toLowerCase().trim(),
         password,
         options: {
-          data: {
-            display_name: displayName || email.split("@")[0],
-          },
-          emailRedirectTo: undefined, // Auto-confirm, no email needed
+          data: { display_name: displayName || email.split('@')[0] },
         },
       });
 
       if (signupError) {
-        console.error("[SignupScreen] Signup error:", signupError.message);
-        
-        // Map error messages to user-friendly ones
-        let errorMessage = signupError.message || "Failed to create account";
-        
-        // If account already exists
-        if (errorMessage.toLowerCase().includes('already registered') || 
-            errorMessage.toLowerCase().includes('user already exists')) {
-          console.log('[SignupScreen] Account already exists, redirecting to login');
-          toast.success("Account already exists. Redirecting to login...");
-          setTimeout(() => navigate("/login", { replace: true }), 1000);
+        console.error('[SignupScreen] Signup error:', signupError);
+        const msg = signupError.message || 'Failed to create account';
+        if (msg.toLowerCase().includes('already') || msg.toLowerCase().includes('registered')) {
+          toast.success('Account already exists. Redirecting to login...');
           setIsLoading(false);
+          setTimeout(() => navigate('/login', { replace: true }), 800);
           return;
         }
-        
-        toast.error(errorMessage);
+        toast.error(msg);
         setIsLoading(false);
         return;
       }
 
-      if (signupData.user) {
-        console.log('[SignupScreen] Account created successfully, attempting auto-login');
-        
-        // Auto-login the user immediately after signup
-        try {
-          const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-            email: email.toLowerCase().trim(),
-            password,
-          });
+      // If a session is returned (email confirmation not required), auto-login succeeded
+      if (signupData?.session) {
+        console.log('[SignupScreen] Auto-login successful for:', email);
+        localStorage.removeItem('guestMode');
+        localStorage.removeItem('guestVisits');
 
-          if (loginError) {
-            console.error('[SignupScreen] Auto-login failed:', loginError);
-            toast.error("Account created! Please log in manually with your credentials.");
-            setTimeout(() => navigate("/login", { replace: true }), 1000);
-            return;
-          }
-
-          if (loginData.session) {
-            console.log('[SignupScreen] Auto-login successful for:', email);
-            // Clear guest mode flag
-            localStorage.removeItem('guestMode');
-            localStorage.removeItem('guestVisits');
-            
-            // If the user did NOT choose to keep signed in, sign them out when the tab/window closes
-            if (!keepSignedIn) {
-              const signOutOnClose = async () => {
-                try {
-                  await supabase.auth.signOut();
-                } catch (e) {
-                  console.error('Error signing out on close:', e);
-                }
-              };
-              window.addEventListener('beforeunload', signOutOnClose);
+        if (!keepSignedIn) {
+          const signOutOnClose = async () => {
+            try {
+              await supabase.auth.signOut();
+            } catch (e) {
+              console.error('Error signing out on close:', e);
             }
-            
-            toast.success(`Welcome, ${email.split('@')[0]}!`);
-            // Redirect with replace to prevent back button going to signup
-            navigate("/app", { replace: true });
-          } else {
-            console.error('[SignupScreen] Login completed but no session');
-            toast.error("Account created! Please log in manually.");
-            navigate("/login", { replace: true });
-          }
-        } catch (autoLoginError: any) {
-          console.error('[SignupScreen] Unexpected auto-login error:', autoLoginError);
-          toast.error("Account created! Please log in manually with your credentials.");
-          setTimeout(() => navigate("/login", { replace: true }), 1000);
+          };
+          window.addEventListener('beforeunload', signOutOnClose);
         }
-      } else {
-        console.error('[SignupScreen] Signup response missing user data');
-        toast.error("Failed to create account - please try again");
-        setIsLoading(false);
+
+        toast.success(`Welcome, ${email.split('@')[0]}!`);
+        navigate('/app', { replace: true });
+        return;
       }
+
+      // Fallback: try immediate sign-in (dev-friendly). If auth requires email confirm this will fail.
+      try {
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: email.toLowerCase().trim(),
+          password,
+        });
+
+        if (!signInError && signInData?.session) {
+          console.log('[SignupScreen] Fallback sign-in succeeded after signup for:', email);
+          localStorage.removeItem('guestMode');
+          localStorage.removeItem('guestVisits');
+          if (!keepSignedIn) {
+            const signOutOnClose = async () => { try { await supabase.auth.signOut(); } catch (e) { console.error('Error signing out on close:', e); } };
+            window.addEventListener('beforeunload', signOutOnClose);
+          }
+          toast.success(`Welcome, ${email.split('@')[0]}!`);
+          navigate('/app', { replace: true });
+          return;
+        }
+      } catch (err) {
+        console.debug('[SignupScreen] Fallback sign-in failed (email confirm likely required)');
+      }
+      
+      // Otherwise, signup succeeded but requires email confirmation
+      toast.success('Account created. Please check your email to confirm your account before logging in.');
+      setTimeout(() => navigate('/login', { replace: true }), 1200);
+      setIsLoading(false);
+      return;
+      
     } catch (error: any) {
       console.error("[SignupScreen] Unexpected error:", error);
       toast.error(error.message || "Failed to create account");

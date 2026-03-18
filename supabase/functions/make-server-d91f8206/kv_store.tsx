@@ -85,3 +85,68 @@ export const getByPrefix = async (prefix: string): Promise<any[]> => {
   }
   return data?.map((d) => d.value) ?? [];
 };
+
+// Atomically increment a numeric KV value. Uses an optimistic compare-and-swap loop.
+export const increment = async (key: string, maxRetries = 12): Promise<number> => {
+  const supabase = client();
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    // Read current value (could be undefined)
+    const { data: readData, error: readError } = await supabase
+      .from('kv_store_d91f8206')
+      .select('value')
+      .eq('key', key)
+      .maybeSingle();
+
+    if (readError) {
+      throw new Error(readError.message);
+    }
+
+    let current = readData?.value;
+
+    // If no row exists, try to insert initial value 1
+    if (current === undefined || current === null) {
+      const { error: insertError } = await supabase
+        .from('kv_store_d91f8206')
+        .insert([{ key, value: 1 }]);
+
+      if (!insertError) {
+        return 1;
+      }
+
+      // If insert failed (likely conflict), loop and retry
+      await new Promise((r) => setTimeout(r, 50 * (attempt + 1)));
+      continue;
+    }
+
+    // Ensure numeric
+    const currentNum = typeof current === 'number' ? current : Number(current);
+    if (Number.isNaN(currentNum)) {
+      throw new Error(`KV value for ${key} is not a number`);
+    }
+
+    const newVal = currentNum + 1;
+
+    // Try optimistic update: update only if value matches the one we read
+    const { data: updateData, error: updateError } = await supabase
+      .from('kv_store_d91f8206')
+      .update({ value: newVal })
+      .match({ key, value: current });
+
+    if (updateError) {
+      // If update failed, retry
+      await new Promise((r) => setTimeout(r, 50 * (attempt + 1)));
+      continue;
+    }
+
+    // If updateData is non-empty, we succeeded
+    if (updateData && (Array.isArray(updateData) ? updateData.length > 0 : true)) {
+      return newVal;
+    }
+
+    // Otherwise, another process changed the value before us; retry with backoff
+    await new Promise((r) => setTimeout(r, 50 * (attempt + 1)));
+  }
+
+  throw new Error(`Failed to increment key ${key} after ${maxRetries} attempts`);
+};
