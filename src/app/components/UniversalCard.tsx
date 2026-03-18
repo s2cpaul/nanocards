@@ -124,7 +124,7 @@ export function UniversalCard({
 
         {/* QR Code - Top Right */}
         {!isVideoPlaying && (
-          <div className="absolute top-3 right-3 bg-white rounded-xl p-2 shadow-lg">
+          <div className="absolute top-3 right-3 bg-[#1e3a8a] rounded-xl p-2 shadow-lg">
             <QRCodeSVG value={cardUrl} size={80} level="M" includeMargin={false} />
           </div>
         )}
