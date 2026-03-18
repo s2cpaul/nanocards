@@ -195,7 +195,6 @@ export function TrainingDetailView() {
                 className="absolute inset-0 w-full h-full object-cover"
                 src={`${module.videoUrl}#t=0.1`}
                 preload="metadata"
-                muted
                 playsInline
               />
               {!hasAccess && (

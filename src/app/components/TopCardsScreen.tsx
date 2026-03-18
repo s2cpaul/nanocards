@@ -83,7 +83,7 @@ export function TopCardsScreen() {
       const featuredCard: any = {
         id: 'featured-001',
         title: 'nAnoCards Overview',
-        videoUrl: 'https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
+        videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
         videoTime: '2:30',
         likes: 1000,
         createdBy: 'carapaulson1@gmail.com', // Created by Cara - so she can edit it
@@ -132,7 +132,7 @@ export function TopCardsScreen() {
       const featuredCard: any = {
         id: 'featured-001',
         title: 'nAnoCards Overview',
-        videoUrl: 'https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
+        videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
         videoTime: '2:30',
         likes: 1000,
         createdBy: 'carapaulson1@gmail.com', // Created by Cara - so she can edit it
