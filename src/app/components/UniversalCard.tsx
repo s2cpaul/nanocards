@@ -128,37 +128,35 @@ export function UniversalCard({
         )}
 
         {/* Download Button */}
-        {!isVideoPlaying && (
-          <button
-            onClick={() => {
-              // Create SVG content for download
-              const svgContent = `<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                <rect width="200" height="200" fill="white"/>
-                <g transform="translate(20,20)">
-                  <rect width="160" height="160" fill="white"/>
-                  ${document.querySelector('[data-testid="qr-code"] svg')?.innerHTML || ''}
-                </g>
-              </svg>`;
+        <button
+          onClick={() => {
+            // Create SVG content for download
+            const svgContent = `<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="200" height="200" fill="white"/>
+              <g transform="translate(20,20)">
+                <rect width="160" height="160" fill="white"/>
+                ${document.querySelector('[data-testid="qr-code"] svg')?.innerHTML || ''}
+              </g>
+            </svg>`;
 
-              // Create download link
-              const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `nAnoCard-${id}-qr.svg`;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(url);
+            // Create download link
+            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nAnoCard-${id}-qr.svg`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
 
-              toast.success('QR Code downloaded!');
-            }}
-            className="absolute top-[108px] right-3 bg-white rounded-xl p-2.5 shadow-lg hover:bg-gray-50 transition-colors"
-            title="Download QR Code"
-          >
-            <Download className="w-6 h-6 text-gray-600" strokeWidth={1.5} />
-          </button>
-        )}
+            toast.success('QR Code downloaded!');
+          }}
+          className="absolute top-[108px] right-3 bg-white rounded-xl p-2.5 shadow-lg hover:bg-gray-50 transition-colors"
+          title="Download QR Code"
+        >
+          <Download className="w-6 h-6 text-gray-600" strokeWidth={1.5} />
+        </button>
 
         {/* Duration - Bottom Right */}
         {videoTime && (
