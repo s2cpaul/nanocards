@@ -167,7 +167,6 @@ export function UniversalCard({
             className="absolute inset-0 w-full h-full object-cover"
             src={`${videoUrl}#t=0.1`}
             preload="metadata"
-            muted
             playsInline
             onEnded={() => setIsVideoPlaying(false)}
           />

@@ -26,7 +26,7 @@ export interface CardEditData {
 export function EditCardModal({ isOpen, onClose, onSave, initialData, isSaving = false, isAdmin = false }: EditCardModalProps) {
   const [editedData, setEditedData] = useState<CardEditData>({
     ...initialData,
-    category: initialData.category || 'Pitch',
+    category: initialData.category || 'Business',
     courseTitle: initialData.courseTitle || ''
   });
   const [existingCourseTitles, setExistingCourseTitles] = useState<string[]>([]);
@@ -73,8 +73,8 @@ export function EditCardModal({ isOpen, onClose, onSave, initialData, isSaving =
   };
   
   // Category options
-  const allCategories = ['Pitch', 'Proof of Work', 'Training', 'AI Leadership', 'NanoCard Academy'];
-  const regularCategories = ['Pitch', 'Proof of Work', 'Training'];
+  const allCategories = ['Business', 'Training', 'Personal', 'AI Leadership', 'NanoCard Academy'];
+  const regularCategories = ['Business', 'Training', 'Personal'];
   const availableCategories = isAdmin ? allCategories : regularCategories;
 
   return (
@@ -183,7 +183,7 @@ export function EditCardModal({ isOpen, onClose, onSave, initialData, isSaving =
             <label htmlFor="edit-category" className="block text-sm font-medium text-gray-700 mb-2">Category</label>
             <select
               id="edit-category"
-              value={editedData.category || 'Pitch'}
+              value={editedData.category || 'Business'}
               onChange={(e) => setEditedData({ ...editedData, category: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
             >

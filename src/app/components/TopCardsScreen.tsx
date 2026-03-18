@@ -79,12 +79,12 @@ export function TopCardsScreen() {
   const loadCards = async () => {
     setIsLoading(true);
     try {
-      // Create featured card #001 - ALWAYS VIEWABLE BY ALL (no auth required)
+      // Create featured card #001 - ONLY CARD SHOWN IN TOP CARDS
       // This is the primary introduction card for nAnoCards
       const featuredCard: any = {
         id: 'featured-001',
         title: 'nAnoCards Overview',
-        videoUrl: 'https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
+        videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/nAnoCards-short.mp4',
         videoTime: '2:30',
         likes: 1000,
         createdBy: 'carapaulson1@gmail.com', // Created by Cara - so she can edit it
@@ -96,22 +96,8 @@ export function TopCardsScreen() {
         visibility: 'public', // Public visibility
       };
 
-      let cardsArray = [featuredCard]; // START with featured card - ALWAYS shown
-
-      try {
-        const headers = await getAuthHeaders();
-        const response = await fetch(`${API_BASE_URL}/cards`, { headers });
-
-        if (response.ok) {
-          const data = await response.json();
-          const apiCards = data.cards || [];
-          // Add any cards from the API after the featured card
-          cardsArray = [featuredCard, ...apiCards];
-        }
-      } catch (error) {
-        console.error("Error fetching cards from API:", error);
-        // Still show featured card even if API fails
-      }
+      // ONLY SHOW THE FEATURED CARD - NO OTHER CARDS
+      const cardsArray = [featuredCard];
 
       // Sort by creation date (oldest first) to assign consistent card numbers
       const sortedByCreation = cardsArray.sort((a: NanoCard, b: NanoCard) =>
@@ -133,7 +119,7 @@ export function TopCardsScreen() {
       const featuredCard: any = {
         id: 'featured-001',
         title: 'nAnoCards Overview',
-        videoUrl: 'https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/nAnoCards-short.mp4',
+        videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/nAnoCards-short.mp4',
         videoTime: '2:30',
         likes: 1000,
         createdBy: 'carapaulson1@gmail.com', // Created by Cara - so she can edit it

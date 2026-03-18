@@ -50,7 +50,7 @@ export function GlobalHeader({
         <div className="flex items-center justify-between">
           {/* Left - Logo & Title */}
           <button
-            onClick={() => navigate('/app')}
+            onClick={() => navigate('/')}
             className="flex items-center gap-2"
           >
             <img src={nAnoLogo} alt="nAnoCards" className="w-8 h-8 rounded-lg" />

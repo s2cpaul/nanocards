@@ -27,7 +27,7 @@ export function CreateCard() {
   const [videoTime, setVideoTime] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [stage, setStage] = useState("");
-  const [categories, setCategories] = useState<string[]>(["Promotional"]);
+  const [categories, setCategories] = useState<string[]>(["Business"]);
   const [courseTitle, setCourseTitle] = useState("");
   const [existingCourseTitles, setExistingCourseTitles] = useState<string[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
@@ -129,8 +129,8 @@ export function CreateCard() {
   };
 
   const handleCategoryToggle = (category: string) => {
-    if (category === 'Promotional' && categories.includes('Promotional')) {
-      toast.error('Promotional category is required and cannot be removed');
+    if (category === 'Business' && categories.includes('Business')) {
+      toast.error('Business category is required and cannot be removed');
       return;
     }
 
@@ -252,7 +252,7 @@ export function CreateCard() {
     }
   };
 
-  const allCategories = ['Promotional', 'Training', 'Customer Service', 'nAno Academy'];
+  const allCategories = ['Business', 'Training', 'Personal', 'nAno Academy'];
   const isOwner = currentUserEmail === 'carapaulson1@gmail.com';
   const isPremiumTier = userTier === 'pro' || userTier === 'enterprise' ||
                         userTier === 'Pro' || userTier === 'Enterprise';
@@ -404,7 +404,7 @@ export function CreateCard() {
                       }`}
                     >
                       {cat}
-                      {cat === 'Promotional' && (
+                      {cat === 'Business' && (
                         <span className="ml-2 text-xs text-[#1e3a8a]">(Required)</span>
                       )}
                       {cat === 'nAno Academy' && isOwner && (

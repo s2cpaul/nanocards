@@ -24,7 +24,7 @@ const ORIGINAL_CARDS = [
   {
     title: "U+Bar Innovation",
     videoTime: "0:00",
-    videoUrl: "https://ffhowwvlytnoulijclac.supabase.co/storage/v1/object/public/nano/WorkforcePromo.mp4",
+    videoUrl: "https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/WorkforcePromo.mp4",
     insights: {
       information: "Innovative bar concept",
     },

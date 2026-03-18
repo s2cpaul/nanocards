@@ -206,13 +206,62 @@ export function TrainingScreen() {
 
       if (response.ok) {
         const data = await response.json();
-        setModules(data.modules || []);
+        const apiModules = data.modules || [];
+        
+        // If no modules from API, add default training module
+        if (apiModules.length === 0) {
+          const defaultModule: TrainingModule = {
+            id: 'training:001',
+            title: 'Getting Started with nAnoCards',
+            description: 'Learn the basics of creating and sharing nano learning cards',
+            content: 'Welcome to nAnoCards! This training module will walk you through the fundamentals of creating effective micro-learning content using our platform. Watch the video to understand how to create impactful nano learning cards.',
+            videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/nAnoCards-short.mp4',
+            duration: '2:30',
+            order: 1,
+            category: 'nAnoCards Academy',
+            createdAt: new Date().toISOString(),
+            createdBy: 'carapaulson1@gmail.com',
+            information: 'Master the art of micro-learning with nAnoCards'
+          };
+          setModules([defaultModule]);
+        } else {
+          setModules(apiModules);
+        }
       } else {
         console.warn('Training modules fetch returned non-OK status:', response.status);
+        // Add default module if API fails
+        const defaultModule: TrainingModule = {
+          id: 'training:001',
+          title: 'Getting Started with nAnoCards',
+          description: 'Learn the basics of creating and sharing nano learning cards',
+          content: 'Welcome to nAnoCards! This training module will walk you through the fundamentals of creating effective micro-learning content using our platform. Watch the video to understand how to create impactful nano learning cards.',
+          videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/nAnoCards-short.mp4',
+          duration: '2:30',
+          order: 1,
+          category: 'nAnoCards Academy',
+          createdAt: new Date().toISOString(),
+          createdBy: 'carapaulson1@gmail.com',
+          information: 'Master the art of micro-learning with nAnoCards'
+        };
+        setModules([defaultModule]);
       }
     } catch (error) {
       console.error('Error loading training modules (network or server issue):', error);
-      // Continue with empty modules array
+      // Add default module if network error
+      const defaultModule: TrainingModule = {
+        id: 'training:001',
+        title: 'Getting Started with nAnoCards',
+        description: 'Learn the basics of creating and sharing nano learning cards',
+        content: 'Welcome to nAnoCards! This training module will walk you through the fundamentals of creating effective micro-learning content using our platform. Watch the video to understand how to create impactful nano learning cards.',
+        videoUrl: 'https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/nAnoCards-short.mp4',
+        duration: '2:30',
+        order: 1,
+        category: 'nAnoCards Academy',
+        createdAt: new Date().toISOString(),
+        createdBy: 'carapaulson1@gmail.com',
+        information: 'Master the art of micro-learning with nAnoCards'
+      };
+      setModules([defaultModule]);
     }
   };
 
