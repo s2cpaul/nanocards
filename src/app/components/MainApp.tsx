@@ -56,6 +56,7 @@ export function MainApp() {
             title: "Welcome to nAnoCards!",
             objective: "Get started with the simplified offline version",
             videoTime: "0:30",
+            videoUrl: "https://lompxaggrcfmmsjkbgyt.supabase.co/storage/v1/object/public/nanocard/WorkforcePromo.mp4",
             information: "This is a demo card. Create your own cards to get started. This simplified version works entirely offline with local storage - no API keys needed!",
             likes: 0,
             createdBy: "demo@example.com",
