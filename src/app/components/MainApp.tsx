@@ -174,18 +174,6 @@ export function MainApp() {
           </Select>
         </div>
 
-        {/* Welcome Message */}
-        {isGuestMode && (
-          <div className="mb-8 bg-white rounded-lg shadow-sm p-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Welcome to nAnoCards!
-            </h1>
-            <p className="text-gray-600">
-              You're using the simplified offline version of nAnoCards. No API keys required!
-            </p>
-          </div>
-        )}
-
         {/* Cards Grid */}
         {error ? (
           <div className="text-center py-12">
