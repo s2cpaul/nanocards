@@ -20,7 +20,8 @@ interface UniversalCardProps {
   cardNumber: string;
   informationText?: string;
   onEdit?: () => void;
-  onSave?: (data: { title: string; informationText?: string }) => void;
+  // onSave now accepts a full card payload
+  onSave?: (data: any) => void;
   thumbnail?: string;
   qrCodeUrl?: string;
   isEditing?: boolean;
@@ -61,6 +62,19 @@ export function UniversalCard({
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [editTitle, setEditTitle] = useState(title);
   const [editInformation, setEditInformation] = useState(informationText);
+  const [editObjective, setEditObjective] = useState('');
+  const [editVideoUrl, setEditVideoUrl] = useState(videoUrl || '');
+  const [editVideoTime, setEditVideoTime] = useState(videoTime || '');
+  const [editThumbnail, setEditThumbnail] = useState(thumbnail || '');
+  const [editStage, setEditStage] = useState('');
+  const [editCategory, setEditCategory] = useState('Business');
+  const [editInsights, setEditInsights] = useState<any>({
+    linkedin: '',
+    discord: '',
+    notion: '',
+    youtube: '',
+    github: '',
+  });
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleCopyLink = async () => {
@@ -92,39 +106,120 @@ export function UniversalCard({
       {/* Title - 40 char limit enforced */}
       <div className="px-6 py-4">
         {isEditing ? (
-          <div className="space-y-3">
+          // Scrollable quick-edit form contained inside the card
+          <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2">
             <div>
-              <label htmlFor={`edit-title-${id}`} className="block text-sm font-medium text-gray-700 mb-1">
-                Title
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Enter card title</label>
               <input
-                id={`edit-title-${id}`}
                 type="text"
                 value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={(e) => setEditTitle(e.target.value.slice(0, 40))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 maxLength={40}
                 placeholder="Enter card title"
               />
+              <p className="text-xs text-gray-500 mt-1">{editTitle.length}/40 characters</p>
             </div>
+
             <div>
-              <label htmlFor={`edit-info-${id}`} className="block text-sm font-medium text-gray-700 mb-1">
-                Information
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Enter card objective</label>
               <textarea
-                id={`edit-info-${id}`}
-                value={editInformation}
-                onChange={(e) => setEditInformation(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                value={editObjective}
+                onChange={(e) => setEditObjective(e.target.value.slice(0, 256))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
                 rows={3}
-                placeholder="Enter information text"
+                placeholder="Enter objective"
+              />
+              <p className="text-xs text-gray-500 mt-1">{editObjective.length}/256 characters</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Video URL</label>
+              <input
+                type="url"
+                value={editVideoUrl}
+                onChange={(e) => setEditVideoUrl(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                placeholder="https://..."
               />
             </div>
-            <div className="flex gap-2 justify-end">
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Video Time</label>
+              <input
+                type="text"
+                value={editVideoTime}
+                onChange={(e) => setEditVideoTime(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                placeholder="1:59 or 2:00 (mm:ss)"
+              />
+              <p className="text-xs text-gray-500 mt-1">Videos must be 2 minutes (120 seconds) or less</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail URL</label>
+              <input
+                type="url"
+                value={editThumbnail}
+                onChange={(e) => setEditThumbnail(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                placeholder="https://..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Select stage</label>
+              <select value={editStage} onChange={(e) => setEditStage(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white">
+                <option value="">Select stage</option>
+                <option value="early">Early</option>
+                <option value="mid">Mid</option>
+                <option value="late">Late</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category (choose one)</label>
+              <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white">
+                <option value="Business">Business (Required)</option>
+                <option value="Training">Training (Pro/Enterprise only)</option>
+                <option value="Personal">Personal</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">1 selected</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Information (hover info text)</label>
+              <textarea
+                value={editInformation}
+                onChange={(e) => setEditInformation(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none"
+                rows={3}
+                placeholder="Text that appears when users hover the info icon..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Links</label>
+              <input type="url" value={editInsights.linkedin} onChange={(e) => setEditInsights({...editInsights, linkedin: e.target.value})} placeholder="https://linkedin.com/..." className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2" />
+              <input type="url" value={editInsights.discord} onChange={(e) => setEditInsights({...editInsights, discord: e.target.value})} placeholder="https://discord.gg/..." className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2" />
+              <input type="url" value={editInsights.notion} onChange={(e) => setEditInsights({...editInsights, notion: e.target.value})} placeholder="https://notion.so/..." className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2" />
+              <input type="url" value={editInsights.youtube} onChange={(e) => setEditInsights({...editInsights, youtube: e.target.value})} placeholder="https://youtube.com/..." className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2" />
+              <input type="url" value={editInsights.github} onChange={(e) => setEditInsights({...editInsights, github: e.target.value})} placeholder="https://github.com/..." className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+            </div>
+
+            <div className="flex gap-2 justify-end pt-2">
               <button
                 onClick={() => {
+                  // Revert edits
                   setEditTitle(title);
                   setEditInformation(informationText);
+                  setEditObjective('');
+                  setEditVideoUrl(videoUrl || '');
+                  setEditVideoTime(videoTime || '');
+                  setEditThumbnail(thumbnail || '');
+                  setEditStage('');
+                  setEditCategory('Business');
+                  setEditInsights({ linkedin: '', discord: '', notion: '', youtube: '', github: '' });
                   onToggleEdit?.();
                 }}
                 className="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1"
@@ -135,7 +230,17 @@ export function UniversalCard({
               <button
                 onClick={() => {
                   if (onSave) {
-                    onSave({ title: editTitle, informationText: editInformation });
+                    onSave({
+                      title: editTitle,
+                      objective: editObjective,
+                      information: editInformation,
+                      videoUrl: editVideoUrl,
+                      videoTime: editVideoTime,
+                      thumbnailUrl: editThumbnail,
+                      stage: editStage,
+                      category: editCategory,
+                      insights: editInsights,
+                    });
                   }
                   onToggleEdit?.();
                 }}
@@ -147,9 +252,7 @@ export function UniversalCard({
             </div>
           </div>
         ) : (
-          <h3 className="text-xl font-bold text-gray-900 leading-tight">
-            {title.slice(0, 40)}
-          </h3>
+          <h3 className="text-xl font-bold text-gray-900 leading-tight">{title.slice(0, 40)}</h3>
         )}
       </div>
 
@@ -189,6 +292,7 @@ export function UniversalCard({
 
         {/* QR Code - Top Right */}
         <button
+          id={`qr-svg-${id}`}
           onClick={async () => {
             try {
               // Create PDF with QR code and title - 8x10 format
@@ -219,7 +323,8 @@ export function UniversalCard({
                 qrCtx.fillRect(0, 0, qrSize, qrSize);
                 
                 // Create QR code SVG and convert to canvas
-                const qrSvg = document.querySelector('.absolute.top-3.right-3 svg');
+                const qrButton = document.getElementById(`qr-svg-${id}`);
+                const qrSvg = qrButton ? qrButton.querySelector('svg') : null;
                 if (qrSvg) {
                   const svgData = new XMLSerializer().serializeToString(qrSvg);
                   const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
@@ -258,7 +363,7 @@ export function UniversalCard({
               toast.error('Failed to generate PDF');
             }
           }}
-          className="absolute top-3 right-3 bg-white rounded-xl p-2 shadow-lg hover:bg-gray-50 transition-colors z-30"
+          className="absolute -top-6 right-3 bg-white rounded-xl p-2 shadow-lg hover:bg-gray-50 transition-colors z-50"
           title="Download PDF with QR Code"
         >
           <QRCodeSVG value={cardUrl} size={80} level="M" includeMargin={false} />
@@ -288,7 +393,8 @@ export function UniversalCard({
                 qrCtx.fillRect(0, 0, qrSize, qrSize);
                 
                 // Create QR code SVG and convert to canvas
-                const qrSvg = document.querySelector('.absolute.top-3.right-3 svg');
+                const qrButton = document.getElementById(`qr-svg-${id}`);
+                const qrSvg = qrButton ? qrButton.querySelector('svg') : null;
                 if (qrSvg) {
                   const svgData = new XMLSerializer().serializeToString(qrSvg);
                   const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
@@ -319,7 +425,7 @@ export function UniversalCard({
               toast.error('Failed to generate PDF');
             }
           }}
-          className="absolute top-[108px] right-3 bg-white rounded-xl p-2.5 shadow-lg hover:bg-gray-50 transition-colors z-30"
+          className="absolute top-[108px] right-3 bg-white rounded-xl p-2.5 shadow-lg hover:bg-gray-50 transition-colors z-40"
           title="Download PDF with QR Code"
         >
           <Download className="w-6 h-6 text-gray-600" strokeWidth={1.5} />

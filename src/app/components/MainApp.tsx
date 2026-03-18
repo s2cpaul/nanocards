@@ -384,7 +384,7 @@ export function MainApp() {
           </div>
 
           <Select value={cardView} onValueChange={(value: "all" | "my") => setCardView(value)}>
-            <SelectTrigger className="w-[184px] h-9 rounded-lg border-gray-300 bg-gray-900 text-white text-sm font-medium">
+            <SelectTrigger className="w-full md:w-[220px] h-10 rounded-lg border border-gray-300 bg-gray-700 text-gray-100 text-base font-medium">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-white">
