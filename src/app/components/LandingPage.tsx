@@ -114,6 +114,12 @@ export function LandingPage() {
                 >
                   LOOK AROUND
                 </button>
+
+                {/* Additional Text */}
+                <p className="text-base text-gray-300 text-center mt-6 leading-relaxed">
+                  Evidence-based Learning!<br />
+                  Applied AI Leadership
+                </p>
               </div>
 
               {/* Home Indicator */}
