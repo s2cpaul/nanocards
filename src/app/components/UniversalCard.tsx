@@ -101,7 +101,9 @@ export function UniversalCard({
             src={`${videoUrl}#t=0.1`}
             preload="metadata"
             playsInline
+            controls
             onEnded={() => setIsVideoPlaying(false)}
+            onPlay={() => setIsVideoPlaying(true)}
           />
         ) : (
           <div className="absolute inset-0 bg-gray-900" />
