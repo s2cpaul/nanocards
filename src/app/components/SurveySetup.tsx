@@ -15,32 +15,40 @@ interface SurveyQuestion {
   options: string[];
 }
 
-export function SurveySetup() {
+export function SurveySetup({ onClose }: { onClose?: () => void }) {
   const navigate = useNavigate();
   const [currentUserEmail, setCurrentUserEmail] = useState("");
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [userPoints, setUserPoints] = useState(0);
   
-  // Default survey questions with 3 options each
-  const defaultQuestions: SurveyQuestion[] = [
+  // Response preset state: 'agree' uses Agree / Neutral / Disagree; 'likelihood' uses Very Likely / Maybe / Not Likely
+  const [responsePreset, setResponsePreset] = useState<'agree' | 'likelihood'>('agree');
+
+  const getPresetOptions = (preset: 'agree' | 'likelihood') => {
+    if (preset === 'likelihood') return ['Very Likely', 'Maybe', 'Not Likely'];
+    return ['Agree', 'Neutral', 'Disagree'];
+  };
+
+  // Default survey questions generator based on preset
+  const defaultQuestions = (preset: 'agree' | 'likelihood'): SurveyQuestion[] => [
     {
       type: "multiple-choice",
       question: "Was this content helpful?",
-      options: ["Yes", "No", "Somewhat"],
+      options: getPresetOptions(preset),
     },
     {
       type: "multiple-choice",
       question: "How likely are you to apply what you learned?",
-      options: ["Very likely", "Somewhat likely", "Not likely"],
+      options: getPresetOptions(preset),
     },
     {
       type: "multiple-choice",
       question: "Would you recommend this to others?",
-      options: ["Definitely", "Maybe", "No"],
+      options: getPresetOptions(preset),
     },
   ];
 
-  const [questions, setQuestions] = useState<SurveyQuestion[]>(defaultQuestions);
+  const [questions, setQuestions] = useState<SurveyQuestion[]>(defaultQuestions(responsePreset));
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -70,10 +78,26 @@ export function SurveySetup() {
     }
   }, []);
 
+  // Apply a preset to all multiple-choice questions (updates options)
+  const applyPresetToQuestions = (preset: 'agree' | 'likelihood') => {
+    setQuestions(prev => prev.map(q => {
+      if (q.type === 'multiple-choice') {
+        return { ...q, options: getPresetOptions(preset) };
+      }
+      return q;
+    }));
+  };
+
+  // When user changes the preset, update state and apply to existing questions
+  const handlePresetChange = (preset: 'agree' | 'likelihood') => {
+    setResponsePreset(preset);
+    applyPresetToQuestions(preset);
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     localStorage.clear();
-    navigate('/');
+    if (onClose) onClose(); else navigate('/');
   };
 
   const handleQuestionChange = (index: number, value: string) => {
@@ -153,7 +177,7 @@ export function SurveySetup() {
     savedLinks.survey = true;
     localStorage.setItem('userSocialLinks', JSON.stringify(savedLinks));
 
-    navigate('/settings');
+    if (onClose) onClose(); else navigate('/settings');
   };
 
   return (
@@ -163,8 +187,9 @@ export function SurveySetup() {
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate('/settings')}
+              onClick={() => { if (onClose) onClose(); else navigate('/settings'); }}
               className="text-gray-600 hover:text-gray-900"
+              aria-label="Back"
             >
               <ArrowLeft className="w-6 h-6" />
             </button>
@@ -189,6 +214,25 @@ export function SurveySetup() {
           </p>
         </div>
 
+        {/* Response Preset Selector */}
+        <div className="mb-4 flex items-center gap-3">
+          <span className="text-sm font-medium text-gray-700">Response Preset:</span>
+          <div className="flex gap-2">
+            <button
+              className={`px-3 py-2 rounded-md text-sm font-medium ${responsePreset === 'agree' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border border-gray-200'}`}
+              onClick={() => handlePresetChange('agree')}
+            >
+              Agree / Neutral / Disagree
+            </button>
+            <button
+              className={`px-3 py-2 rounded-md text-sm font-medium ${responsePreset === 'likelihood' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border border-gray-200'}`}
+              onClick={() => handlePresetChange('likelihood')}
+            >
+              Very Likely / Maybe / Not Likely
+            </button>
+          </div>
+        </div>
+
         {/* Survey Questions */}
         <div className="space-y-6 mb-6">
           {questions.map((q, qIndex) => (
@@ -199,6 +243,7 @@ export function SurveySetup() {
                   <button
                     onClick={() => handleRemoveQuestion(qIndex)}
                     className="text-red-500 hover:text-red-600"
+                    aria-label={`Remove question ${qIndex + 1}`}
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>

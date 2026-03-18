@@ -26,6 +26,7 @@ export function CreateCard() {
   const [thumbnail, setThumbnail] = useState("");
   const [videoTime, setVideoTime] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+  const [preallocatedId, setPreallocatedId] = useState<string | null>(null);
   const [stage, setStage] = useState("");
   const [categories, setCategories] = useState<string[]>(["Business"]);
   const [courseTitle, setCourseTitle] = useState("");
@@ -84,6 +85,20 @@ export function CreateCard() {
           }
         } catch (error) {
           console.error('Error fetching user points:', error);
+        }
+
+        // Reserve a sequential immutable card id for this user when opening the create form
+        try {
+          const headers2 = await getAuthHeaders();
+          const res = await fetch(`${API_BASE_URL}/cards/next`, { method: 'POST', headers: headers2 });
+          if (res.ok) {
+            const json = await res.json();
+            if (json?.id) setPreallocatedId(json.id);
+          } else {
+            console.warn('Failed to reserve card id');
+          }
+        } catch (err) {
+          console.error('Error reserving card id:', err);
         }
       } else {
         // No session - check if guest mode
@@ -211,19 +226,20 @@ export function CreateCard() {
           categories,
           courseTitle,
           appOrigin: window.location.origin,
-          insights: filteredInsights,
-          interactive: enableInteractive ? {
-            type: interactiveType,
-            question: interactiveQuestion,
-            textLines: textLines.filter(line => line.trim() !== ''),
-            options: interactiveType === 'quiz' || interactiveType === 'survey' ? options.filter(o => o.trim() !== '') : undefined,
-            correctAnswer: interactiveType === 'quiz' ? correctAnswer : undefined,
-            dragItems: interactiveType === 'dragdrop' ? dragItems.filter(i => i.trim() !== '') : undefined,
-            dropZones: interactiveType === 'dragdrop' ? dropZones.filter(z => z.trim() !== '') : undefined,
-            allowTextResponse: interactiveType === 'survey' ? allowTextResponse : undefined,
-          } : undefined,
-        }),
-      });
+          preallocatedId: preallocatedId || undefined,
+           insights: filteredInsights,
+           interactive: enableInteractive ? {
+             type: interactiveType,
+             question: interactiveQuestion,
+             textLines: textLines.filter(line => line.trim() !== ''),
+             options: interactiveType === 'quiz' || interactiveType === 'survey' ? options.filter(o => o.trim() !== '') : undefined,
+             correctAnswer: interactiveType === 'quiz' ? correctAnswer : undefined,
+             dragItems: interactiveType === 'dragdrop' ? dragItems.filter(i => i.trim() !== '') : undefined,
+             dropZones: interactiveType === 'dragdrop' ? dropZones.filter(z => z.trim() !== '') : undefined,
+             allowTextResponse: interactiveType === 'survey' ? allowTextResponse : undefined,
+           } : undefined,
+         }),
+       });
 
       const data = await response.json();
 
@@ -301,6 +317,19 @@ export function CreateCard() {
             <p className="text-xs text-gray-400 mt-1">{title.length}/40 characters</p>
           </div>
 
+          {/* Immutable Card ID (reserved on form open) */}
+          <div>
+            <Label className="text-sm font-semibold text-gray-900">Card ID</Label>
+            <input
+              type="text"
+              value={preallocatedId ?? ''}
+              readOnly
+              disabled
+              className="mt-1 w-full px-3 py-2 border border-gray-200 rounded bg-gray-50 text-sm font-mono"
+            />
+            <p className="text-xs text-gray-400 mt-1">This card number is reserved and cannot be changed.</p>
+          </div>
+
           {/* Objective */}
           <div>
             <Label htmlFor="objective" className="text-sm font-semibold text-gray-900">
@@ -370,7 +399,7 @@ export function CreateCard() {
               </SelectTrigger>
               <SelectContent>
                 {STAGES.map((s) => (
-                  <SelectItem key={s.value} value={s.value.toLowerCase().replace(/\//g, '-')}>
+                  <SelectItem key={s.value} value={s.value}>
                     {s.label}
                   </SelectItem>
                 ))}

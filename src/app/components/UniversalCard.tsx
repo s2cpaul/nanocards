@@ -5,7 +5,7 @@ import {
   Check, X,
 } from "lucide-react";
 import { QRCodeSVG } from 'qrcode.react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 
@@ -76,6 +76,123 @@ export function UniversalCard({
     github: '',
   });
   const videoRef = useRef<HTMLVideoElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const [titleFontSizePx, setTitleFontSizePx] = useState<number>(20); // starting px size
+
+  // map sizes to Tailwind arbitrary text-size classes (explicit literals so purge picks them up)
+  const FONT_CLASS_BY_SIZE: Record<number, string> = {
+    20: 'text-[20px]',
+    19: 'text-[19px]',
+    18: 'text-[18px]',
+    17: 'text-[17px]',
+    16: 'text-[16px]',
+    15: 'text-[15px]',
+    14: 'text-[14px]',
+    13: 'text-[13px]',
+    12: 'text-[12px]',
+  };
+  const clampedTitleSize = Math.max(12, Math.min(20, Math.round(titleFontSizePx)));
+  const titleSizeClass = FONT_CLASS_BY_SIZE[clampedTitleSize] || 'text-[16px]';
+
+  // NEW: parsed total seconds and remaining countdown state
+  const [totalSeconds, setTotalSeconds] = useState<number | null>(null);
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
+
+  const parseVideoTime = (t?: string): number | null => {
+    if (!t) return null;
+    const parts = t.split(':').map((p) => parseInt(p.trim(), 10));
+    if (parts.some(isNaN)) return null;
+    let secs = 0;
+    if (parts.length === 2) {
+      secs = parts[0] * 60 + parts[1];
+    } else if (parts.length === 3) {
+      secs = parts[0] * 3600 + parts[1] * 60 + parts[2];
+    } else {
+      return null;
+    }
+    return secs;
+  };
+
+  const formatSeconds = (s: number) => {
+    const mm = Math.floor(s / 60).toString().padStart(1, '0');
+    const ss = (s % 60).toString().padStart(2, '0');
+    return `${mm}:${ss}`;
+  };
+
+  // Keep totalSeconds in sync with prop
+  useEffect(() => {
+    const tot = parseVideoTime(videoTime);
+    setTotalSeconds(tot);
+    setRemainingSeconds(null);
+  }, [videoTime]);
+
+  // Countdown effect: poll video currentTime while playing and update remainingSeconds
+  useEffect(() => {
+    let timer: number | undefined;
+    if (isVideoPlaying && totalSeconds != null) {
+      const tick = () => {
+        const cur = videoRef.current?.currentTime || 0;
+        const rem = Math.max(totalSeconds - Math.floor(cur), 0);
+        setRemainingSeconds(rem);
+        if (rem <= 0) {
+          // ensure UI resets when video completes
+          setIsVideoPlaying(false);
+        }
+      };
+      tick();
+      timer = window.setInterval(tick, 500);
+    } else {
+      // Not playing: clear shown countdown so we display the original videoTime
+      setRemainingSeconds(null);
+    }
+    return () => {
+      if (timer) window.clearInterval(timer);
+    };
+  }, [isVideoPlaying, totalSeconds]);
+
+  // Ensure title fits on a single line by reducing font-size until it fits (within limits)
+  useEffect(() => {
+    const el = titleRef.current;
+    if (!el) return;
+
+    const fit = () => {
+      // Detect mobile breakpoint (Tailwind 'sm'/'md' boundaries) and adjust sizes
+      const isMobile = window.matchMedia('(max-width: 640px)').matches;
+
+      // start from a sensible base and shrink until fits or min reached
+      let size = isMobile ? 18 : 20; // start slightly smaller on mobile
+      const minSize = isMobile ? 11 : 12; // allow smaller minimum on mobile
+
+      // Force single-line rendering when fitting
+      el.style.whiteSpace = 'nowrap';
+      el.style.overflow = 'hidden';
+      el.style.textOverflow = 'ellipsis';
+      el.style.display = 'block';
+      el.style.fontWeight = '700';
+
+      // Apply initial size and measure against available width (parent width)
+      el.style.fontSize = `${size}px`;
+      const parent = el.parentElement || el;
+      const availableWidth = parent.clientWidth;
+
+      // Reduce font size until the title fits within available width or we hit minSize
+      while (el.scrollWidth > availableWidth && size > minSize) {
+        size -= 1;
+        el.style.fontSize = `${size}px`;
+      }
+
+      setTitleFontSizePx(size);
+    };
+
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el.parentElement || el);
+    window.addEventListener('resize', fit);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', fit);
+    };
+  }, [title, isEditing]);
 
   const handleCopyLink = async () => {
     try {
@@ -169,7 +286,7 @@ export function UniversalCard({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Select stage</label>
-              <select value={editStage} onChange={(e) => setEditStage(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white">
+              <select value={editStage} onChange={(e) => setEditStage(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white" title="Select stage">
                 <option value="">Select stage</option>
                 <option value="early">Early</option>
                 <option value="mid">Mid</option>
@@ -179,7 +296,7 @@ export function UniversalCard({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Category (choose one)</label>
-              <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white">
+              <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white" title="Select category">
                 <option value="Business">Business (Required)</option>
                 <option value="Training">Training (Pro/Enterprise only)</option>
                 <option value="Personal">Personal</option>
@@ -252,12 +369,19 @@ export function UniversalCard({
             </div>
           </div>
         ) : (
-          <h3 className="text-xl font-bold text-gray-900 leading-tight">{title.slice(0, 40)}</h3>
+          <h3
+            ref={titleRef}
+            className={`text-gray-900 ${titleSizeClass} leading-none font-bold truncate whitespace-nowrap`}
+            // font size controlled via state to ensure single-line fit (mapped to Tailwind classes to avoid inline styles)
+            title={title}
+          >
+            {title}
+          </h3>
         )}
       </div>
 
       {/* Video Area with QR Code */}
-      <div className="relative w-full bg-gray-900" style={{ paddingBottom: '56.25%' }}>
+      <div className="relative w-full bg-gray-900 pb-[56.25%]">
         {thumbnail ? (
           <img
             className="absolute inset-0 w-full h-full object-cover"
@@ -301,27 +425,52 @@ export function UniversalCard({
                 unit: 'in',
                 format: [8, 10]
               });
-              
-              // Add title - centered and bolder
-              pdf.setFontSize(24);
+
+              const pageWidth = 8;
+              const marginTop = 0.5; // inches
+              const baseFontSize = 12; // uniform size for all text
+
+              // nAnoCard label (bold)
+              pdf.setFontSize(baseFontSize);
               pdf.setFont('helvetica', 'bold');
-              const titleWidth = pdf.getTextWidth(title.slice(0, 40));
-              const pageWidth = 8; // 8 inches
-              const titleX = (pageWidth - titleWidth / 72) / 2; // Convert points to inches and center
-              pdf.text(title.slice(0, 40), titleX * 72, 1.5 * 72); // 1.5 inches from top
-              
-              // Add QR code as image - 15% larger and centered
+              const label = 'nAnoCard';
+              const labelWidth = pdf.getTextWidth(label);
+              const labelX = (pageWidth - labelWidth / 72) / 2; // center
+              pdf.text(label, labelX * 72, marginTop * 72);
+
+              // Title (normal, same size)
+              pdf.setFont('helvetica', 'normal');
+              const cardTitle = title.slice(0, 40);
+              const titleWidth = pdf.getTextWidth(cardTitle);
+              const titleX = (pageWidth - titleWidth / 72) / 2;
+              pdf.text(cardTitle, titleX * 72, (marginTop + 0.25) * 72);
+
+              // Information text (same font size)
+              const infoText = informationText || '';
+              const infoY = (marginTop + 0.55) * 72;
+              // Wrap information text to page width with a small inset
+              const infoMaxWidthPts = (pageWidth - 1) * 72; // 0.5in margin on each side
+              const infoLines = pdf.splitTextToSize(infoText, infoMaxWidthPts);
+              pdf.text(infoLines, 0.5 * 72, infoY);
+
+              // Contact email (same font size)
+              const contactLine = 'Contact: contact@nanocards.now';
+              const contactWidth = pdf.getTextWidth(contactLine);
+              const contactX = (pageWidth - contactWidth / 72) / 2;
+              pdf.text(contactLine, contactX * 72, (marginTop + 1.15) * 72);
+
+              // Add QR code as image - 15% smaller than previous (use inches)
               const qrCanvas = document.createElement('canvas');
-              const qrSize = 150 * 1.15; // 15% larger than 150
-              qrCanvas.width = qrSize;
-              qrCanvas.height = qrSize;
+              const qrSizePx = Math.round(150 * 0.85); // smaller pixel size
+              qrCanvas.width = qrSizePx;
+              qrCanvas.height = qrSizePx;
               const qrCtx = qrCanvas.getContext('2d');
-              
+
               if (qrCtx) {
                 // Fill white background
                 qrCtx.fillStyle = 'white';
-                qrCtx.fillRect(0, 0, qrSize, qrSize);
-                
+                qrCtx.fillRect(0, 0, qrSizePx, qrSizePx);
+
                 // Create QR code SVG and convert to canvas
                 const qrButton = document.getElementById(`qr-svg-${id}`);
                 const qrSvg = qrButton ? qrButton.querySelector('svg') : null;
@@ -329,27 +478,27 @@ export function UniversalCard({
                   const svgData = new XMLSerializer().serializeToString(qrSvg);
                   const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
                   const svgUrl = URL.createObjectURL(svgBlob);
-                  
+
                   const img = new Image();
                   img.onload = () => {
-                    qrCtx.drawImage(img, 0, 0, qrSize, qrSize);
+                    qrCtx.drawImage(img, 0, 0, qrSizePx, qrSizePx);
                     const qrDataUrl = qrCanvas.toDataURL('image/png');
-                    
-                    // Add QR code to PDF - centered
-                    const qrWidth = 2.5; // 2.5 inches wide
-                    const qrHeight = 2.5; // 2.5 inches tall
-                    const qrX = (pageWidth - qrWidth) / 2; // Center horizontally
-                    const qrY = 3; // 3 inches from top
-                    pdf.addImage(qrDataUrl, 'PNG', qrX, qrY, qrWidth, qrHeight);
-                    
+
+                    // Add QR code to PDF - centered below the text
+                    const qrWidthIn = 2.5 * 0.85; // 15% smaller than 2.5in
+                    const qrHeightIn = qrWidthIn;
+                    const qrX = (pageWidth - qrWidthIn) / 2;
+                    const qrY = 2; // start ~2 inches from top to allow text above
+                    pdf.addImage(qrDataUrl, 'PNG', qrX, qrY, qrWidthIn, qrHeightIn);
+
                     // Add card URL below QR code - centered
-                    pdf.setFontSize(12);
+                    pdf.setFontSize(baseFontSize);
                     pdf.setFont('helvetica', 'normal');
                     const urlText = `Card URL: ${cardUrl}`;
                     const urlWidth = pdf.getTextWidth(urlText);
                     const urlX = (pageWidth - urlWidth / 72) / 2; // Center horizontally
-                    pdf.text(urlText, urlX * 72, (qrY + qrHeight + 0.5) * 72); // 0.5 inches below QR code
-                    
+                    pdf.text(urlText, urlX * 72, (qrY + qrHeightIn + 0.3) * 72); // 0.3 inches below QR code
+
                     // Save PDF
                     pdf.save(`nAnoCard-${id}.pdf`);
                     URL.revokeObjectURL(svgUrl);
@@ -363,7 +512,7 @@ export function UniversalCard({
               toast.error('Failed to generate PDF');
             }
           }}
-          className="absolute -top-6 right-3 bg-white rounded-xl p-2 shadow-lg hover:bg-gray-50 transition-colors z-50"
+          className="absolute -top-[14px] right-3 bg-white rounded-xl p-2 shadow-lg hover:bg-gray-50 transition-colors z-0"
           title="Download PDF with QR Code"
         >
           <QRCodeSVG value={cardUrl} size={80} level="M" includeMargin={false} />
@@ -373,46 +522,77 @@ export function UniversalCard({
         <button
           onClick={async () => {
             try {
-              // Create PDF with QR code and title
-              const pdf = new jsPDF();
-              
-              // Add title
-              pdf.setFontSize(20);
-              pdf.text(title.slice(0, 40), 20, 30);
-              
-              // Add QR code as image
+              // Create PDF with QR code and title in inches
+              const pdf = new jsPDF({ unit: 'in', format: [8, 10] });
+              const pageWidth = 8;
+              const marginTop = 0.5;
+              const baseFontSize = 12;
+
+              // nAnoCard label (bold)
+              pdf.setFontSize(baseFontSize);
+              pdf.setFont('helvetica', 'bold');
+              const label = 'nAnoCard';
+              const labelWidth = pdf.getTextWidth(label);
+              const labelX = (pageWidth - labelWidth / 72) / 2;
+              pdf.text(label, labelX * 72, marginTop * 72);
+
+              // Title (normal)
+              pdf.setFont('helvetica', 'normal');
+              const cardTitle = title.slice(0, 40);
+              const titleWidth = pdf.getTextWidth(cardTitle);
+              const titleX = (pageWidth - titleWidth / 72) / 2;
+              pdf.text(cardTitle, titleX * 72, (marginTop + 0.25) * 72);
+
+              // Information text
+              const infoText = informationText || '';
+              const infoY = (marginTop + 0.55) * 72;
+              const infoMaxWidthPts = (pageWidth - 1) * 72;
+              const infoLines = pdf.splitTextToSize(infoText, infoMaxWidthPts);
+              pdf.text(infoLines, 0.5 * 72, infoY);
+
+              // Contact email
+              const contactLine = 'Contact: contact@nanocards.now';
+              const contactWidth = pdf.getTextWidth(contactLine);
+              const contactX = (pageWidth - contactWidth / 72) / 2;
+              pdf.text(contactLine, contactX * 72, (marginTop + 1.15) * 72);
+
+              // Add QR code image (smaller)
               const qrCanvas = document.createElement('canvas');
-              const qrSize = 150;
-              qrCanvas.width = qrSize;
-              qrCanvas.height = qrSize;
+              const qrSizePx = Math.round(150 * 0.85);
+              qrCanvas.width = qrSizePx;
+              qrCanvas.height = qrSizePx;
               const qrCtx = qrCanvas.getContext('2d');
-              
+
               if (qrCtx) {
-                // Fill white background
                 qrCtx.fillStyle = 'white';
-                qrCtx.fillRect(0, 0, qrSize, qrSize);
-                
-                // Create QR code SVG and convert to canvas
+                qrCtx.fillRect(0, 0, qrSizePx, qrSizePx);
+
                 const qrButton = document.getElementById(`qr-svg-${id}`);
                 const qrSvg = qrButton ? qrButton.querySelector('svg') : null;
                 if (qrSvg) {
                   const svgData = new XMLSerializer().serializeToString(qrSvg);
                   const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
                   const svgUrl = URL.createObjectURL(svgBlob);
-                  
+
                   const img = new Image();
                   img.onload = () => {
-                    qrCtx.drawImage(img, 0, 0, qrSize, qrSize);
+                    qrCtx.drawImage(img, 0, 0, qrSizePx, qrSizePx);
                     const qrDataUrl = qrCanvas.toDataURL('image/png');
-                    
-                    // Add QR code to PDF
-                    pdf.addImage(qrDataUrl, 'PNG', 20, 50, 80, 80);
-                    
-                    // Add card URL below QR code
-                    pdf.setFontSize(10);
-                    pdf.text(`Card URL: ${cardUrl}`, 20, 150);
-                    
-                    // Save PDF
+
+                    const qrWidthIn = 2.5 * 0.85;
+                    const qrHeightIn = qrWidthIn;
+                    const qrX = (pageWidth - qrWidthIn) / 2;
+                    const qrY = 2;
+                    pdf.addImage(qrDataUrl, 'PNG', qrX, qrY, qrWidthIn, qrHeightIn);
+
+                    // Card URL below QR code
+                    pdf.setFontSize(baseFontSize);
+                    pdf.setFont('helvetica', 'normal');
+                    const urlText = `Card URL: ${cardUrl}`;
+                    const urlWidth = pdf.getTextWidth(urlText);
+                    const urlX = (pageWidth - urlWidth / 72) / 2;
+                    pdf.text(urlText, urlX * 72, (qrY + qrHeightIn + 0.3) * 72);
+
                     pdf.save(`nAnoCard-${id}.pdf`);
                     URL.revokeObjectURL(svgUrl);
                     toast.success('PDF downloaded!');
@@ -425,16 +605,23 @@ export function UniversalCard({
               toast.error('Failed to generate PDF');
             }
           }}
-          className="absolute top-[108px] right-3 bg-white rounded-xl p-2.5 shadow-lg hover:bg-gray-50 transition-colors z-40"
+          className="absolute top-[70px] right-3 -translate-y-1 bg-white rounded-xl p-2.5 shadow-lg hover:bg-gray-50 transition-colors z-0"
           title="Download PDF with QR Code"
         >
           <Download className="w-6 h-6 text-gray-600" strokeWidth={1.5} />
         </button>
 
-        {/* Duration - Bottom Right */}
-        {videoTime && (
-          <div className="absolute bottom-3 right-3 bg-black/80 text-white px-3 py-1.5 rounded-lg text-base font-bold z-30">
-            {videoTime}
+        {/* Duration - Bottom Right: show countdown while playing, otherwise show provided video time */}
+        {(videoTime || remainingSeconds !== null) && (
+          <div className="absolute bottom-2 right-2 bg-black/80 text-white px-2 py-1 rounded-md text-sm font-semibold z-30">
+            {remainingSeconds !== null && isVideoPlaying ? formatSeconds(remainingSeconds) : videoTime}
+          </div>
+        )}
+
+        {/* Countdown - Bottom Right (overlapping duration) */}
+        {isVideoPlaying && remainingSeconds !== null && (
+          <div className="absolute bottom-2 right-2 -mr-1 bg-black/80 text-white px-2 py-1 rounded-md text-sm font-semibold z-30">
+            {formatSeconds(remainingSeconds)}
           </div>
         )}
       </div>
@@ -454,8 +641,7 @@ export function UniversalCard({
           {/* Info Popup */}
           {showInfoPopup && (
             <div
-              className="absolute bottom-full left-0 mb-2 z-50 pointer-events-none"
-              style={{ minWidth: '280px', maxWidth: '340px' }}
+              className="absolute bottom-full left-0 mb-2 z-50 pointer-events-none min-w-[280px] max-w-[340px]"
             >
               <div className="relative px-5 py-4 bg-white text-gray-800 text-sm rounded-2xl shadow-xl border border-gray-200">
                 <div className="text-gray-900 leading-relaxed break-words whitespace-pre-wrap">
@@ -506,11 +692,16 @@ export function UniversalCard({
           <Mail className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
         </button>
         <button
-          className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors relative"
-          title={linkCopied ? "Copied" : "Copy Link"}
           onClick={handleCopyLink}
+          className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors focus:outline-none"
+          title={linkCopied ? "Copied to clipboard" : "Copy link"}
+          aria-label={linkCopied ? "Link copied" : "Copy link"}
+          aria-pressed={linkCopied ? 'true' : 'false'}
         >
-          <LinkIcon className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+          <LinkIcon
+            className={`w-6 h-6 transition-colors ${linkCopied ? 'text-blue-400' : 'text-gray-400'} hover:text-blue-400`}
+            strokeWidth={1.5}
+          />
         </button>
 
         {/* Heart - THE ONLY COLORED ICON (red) */}

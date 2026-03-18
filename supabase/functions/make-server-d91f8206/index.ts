@@ -46,6 +46,34 @@ app.use(
   }),
 );
 
+// Add explicit CORS headers and an OPTIONS preflight handler to ensure
+// the function always responds with the required headers for browsers.
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, Prefer",
+};
+
+// Handle OPTIONS preflight requests for any path
+app.options("/*", (c) => {
+  return new Response(null, { status: 204, headers: CORS_HEADERS });
+});
+
+// Middleware to attach CORS headers to every response (safety-net)
+app.use("/*", async (c, next) => {
+  await next();
+  // Ensure headers are present on the response
+  try {
+    c.header("Access-Control-Allow-Origin", "*");
+    c.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    c.header("Access-Control-Allow-Headers", "Content-Type, Authorization, apikey, Prefer");
+  } catch (e) {
+    // If c.header isn't available for some reason, ignore and continue
+    console.warn('Failed to set CORS headers via c.header:', e);
+  }
+  return c;
+});
+
 // Health check endpoint with edge metrics
 app.get("/make-server-d91f8206/health", (c) => {
   return c.json({ 
@@ -99,7 +127,7 @@ app.post("/make-server-d91f8206/cards", async (c) => {
     }
 
     const body = await c.req.json();
-    const { title, videoTime, videoUrl, insights, country, category, courseTitle, appOrigin } = body;
+    const { title, videoTime, videoUrl, insights, country, category, courseTitle, appOrigin, preallocatedId } = body;
 
     if (!title || !videoTime) {
       return c.json({ error: "Title and videoTime are required" }, 400);
@@ -155,10 +183,23 @@ app.post("/make-server-d91f8206/cards", async (c) => {
     const orgId = userProfile?.orgId || null;
     const orgPrefix = userProfile?.orgPrefix || null;
 
-    // Generate unique sequential card ID using a persistent counter.
-    // Use atomic increment helper provided by kv to avoid race conditions.
-    const incremented = await kv.increment('system:cardCounter');
-    const newId = String(incremented).padStart(3, '0');
+    let newId: string;
+
+    if (preallocatedId) {
+      // Validate and use the preallocated ID
+      const reservation = await kv.get(`reserved:${preallocatedId}`);
+      
+      if (!reservation || reservation.reservedBy !== user.id) {
+        return c.json({ error: "Invalid or expired ID reservation" }, 400);
+      }
+      
+      newId = preallocatedId;
+    } else {
+      // Generate unique sequential card ID using a persistent counter.
+      // Use atomic increment helper provided by kv to avoid race conditions.
+      const incremented = await kv.increment('system:cardCounter');
+      newId = String(incremented).padStart(3, '0');
+    }
 
     // Deep link URL for QR code sharing - each card gets a unique, permanent URL
     // Uses appOrigin sent by the frontend (window.location.origin) for reliability
@@ -710,7 +751,7 @@ app.post("/make-server-d91f8206/training/modules", async (c) => {
     }
 
     // Generate module ID
-    const existingModules = await kv.getByPrefix "training:";
+    const existingModules = await kv.getByPrefix("training:");
     const moduleCount = (existingModules || []).length;
     const moduleId = `training:${String(moduleCount + 1).padStart(3, "0")}`;
 
@@ -1967,7 +2008,7 @@ app.get("/make-server-d91f8206/courses/titles", async (c) => {
       cards = await kv.getByPrefix(`card:${orgId}:`);
     } else {
       // Get all cards created by this user
-      const allCards = await kv.getByPrefix "card:";
+      const allCards = await kv.getByPrefix("card:");
       cards = allCards.filter(card => card.createdBy === user.email);
     }
 

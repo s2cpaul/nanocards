@@ -38,14 +38,14 @@ export function BottomNav({ onCreateClick, currentUserEmail }: BottomNavProps) {
           <span className="text-xs">Training</span>
         </button>
 
-        {currentUserEmail && (
-          <button
-            onClick={onCreateClick}
-            className="flex flex-col items-center gap-1 px-3 py-2 -mt-6 bg-blue-600 text-white rounded-full shadow-lg"
-          >
-            <Plus className="w-8 h-8" />
-          </button>
-        )}
+        {/* Always show the create (+) button so guests can open the form; saving is gated server-side */}
+        <button
+          onClick={onCreateClick}
+          className="flex flex-col items-center gap-1 px-3 py-2 -mt-6 bg-blue-600 text-white rounded-full shadow-lg"
+          aria-label="Create content"
+        >
+          <Plus className="w-8 h-8" />
+        </button>
 
         <button
           onClick={() => navigate("/subscription")}

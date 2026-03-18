@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "../../lib/supabase";
+import { supabase, initializeAuth } from "../../lib/supabase";
 
 /**
  * Custom hook for managing authentication state
@@ -24,6 +24,13 @@ export function useAuth() {
         setIsGuestMode(false);
         setLoading(false);
         return;
+      }
+
+      // Ensure auth initialization (restores session from localStorage/cookies)
+      try {
+        await initializeAuth();
+      } catch (err) {
+        console.warn('[useAuth] initializeAuth failed:', err);
       }
 
       // Check actual auth session FIRST (before guest mode)

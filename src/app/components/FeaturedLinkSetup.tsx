@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { supabase, API_BASE_URL, getAuthHeaders } from "../../lib/supabase";
 import { STAGES } from "../constants/stages";
 import { HamburgerMenu } from "./HamburgerMenu";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 
 interface AdditionalLink {
   url: string;

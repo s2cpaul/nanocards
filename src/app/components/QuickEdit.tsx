@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { API_BASE_URL, getAuthHeaders, supabase } from "../../lib/supabase";
 import { NanoCard } from "../types";
 import { HamburgerMenu } from "./HamburgerMenu";
+import { STAGES } from "../constants/stages";
 
 export function QuickEdit() {
   const navigate = useNavigate();
@@ -453,22 +454,16 @@ export function QuickEdit() {
                 {/* Stage */}
                 <div>
                   <Label htmlFor="stage" className="text-gray-900 font-medium">
-                    Stage (Optional)
+                    Stage
                   </Label>
-                  <Select
-                    value={stage}
-                    onValueChange={(value) => setStage(value)}
-                  >
-                    <SelectTrigger>
+                  <Select value={stage} onValueChange={setStage}>
+                    <SelectTrigger className="w-full mt-2 bg-white">
                       <SelectValue placeholder="Select stage" />
                     </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
-                      <SelectItem value="idea">Idea</SelectItem>
-                      <SelectItem value="validation">Validation</SelectItem>
-                      <SelectItem value="planning">Planning</SelectItem>
-                      <SelectItem value="execution">Execution</SelectItem>
-                      <SelectItem value="growth">Growth</SelectItem>
-                      <SelectItem value="reinvention">Reinvention</SelectItem>
+                    <SelectContent>
+                      {STAGES.map((s) => (
+                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

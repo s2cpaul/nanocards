@@ -132,6 +132,8 @@ export function MainApp() {
         }
 
         // Try to restore existing session
+        // Ensure auth system has a chance to initialize and refresh tokens
+        await initializeAuth();
         const session = await getCurrentSession();
         
         if (!isMounted) return;
@@ -227,13 +229,9 @@ export function MainApp() {
   };
 
   const handleCreateCard = () => {
-    if (isGuestMode) {
-      toast.error('Account required to create cards', {
-        description: 'Please login to create your own nAnoCards',
-        duration: 4000,
-      });
-      return;
-    }
+    // Allow anyone (including guests) to open the create flow UI. The CreateCard component
+    // enforces that only authenticated users may submit/save a card (it checks isGuestMode).
+    // Guests will be shown the form but will see a login prompt if they try to submit.
     navigate('/create');
   };
 
@@ -437,6 +435,7 @@ export function MainApp() {
       <div className="fixed bottom-2.5 right-2.5">
         <button
           onClick={handleCreateCard}
+          aria-label="Create content"
           className="w-12 h-12 bg-[#1e3a8a] hover:bg-blue-800 text-white rounded-full shadow-lg flex items-center justify-center opacity-40 hover:opacity-60 transition-opacity"
         >
           <Plus className="w-6 h-6" strokeWidth={1.5} />

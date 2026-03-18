@@ -77,15 +77,50 @@ export function SignupScreen() {
       if (signupError) {
         console.error('[SignupScreen] Signup error:', signupError);
         const msg = signupError.message || 'Failed to create account';
+
+        // Helpful handling for common configuration issue
+        if (msg.toLowerCase().includes('invalid api key') || msg.toLowerCase().includes('invalid key')) {
+          toast.error('Invalid Supabase API key. Check your VITE_SUPABASE_ANON_KEY and VITE_SUPABASE_PROJECT_ID environment variables and restart the dev server.');
+          setIsLoading(false);
+          return;
+        }
+
         if (msg.toLowerCase().includes('already') || msg.toLowerCase().includes('registered')) {
           toast.success('Account already exists. Redirecting to login...');
           setIsLoading(false);
           setTimeout(() => navigate('/login', { replace: true }), 800);
           return;
         }
+
         toast.error(msg);
         setIsLoading(false);
         return;
+      }
+
+      // Persist a lightweight profile record in Supabase so UID / email / tier are stored without an edge function
+      async function ensureProfileExists(userId?: string, userEmail?: string) {
+        try {
+          if (!userId || !userEmail) return;
+          const profile = {
+            id: userId,
+            email: userEmail,
+            display_name: displayName || userEmail.split('@')[0],
+            subscription_tier: 'free',
+            updated_at: new Date().toISOString(),
+          } as any;
+
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .upsert(profile);
+
+          if (profileError) {
+            console.warn('[SignupScreen] Could not upsert profile (table may not exist):', profileError.message);
+          } else {
+            console.log('[SignupScreen] Profile upsert succeeded for', userEmail);
+          }
+        } catch (err) {
+          console.error('[SignupScreen] Unexpected error creating profile:', err);
+        }
       }
 
       // If a session is returned (email confirmation not required), auto-login succeeded
@@ -93,6 +128,13 @@ export function SignupScreen() {
         console.log('[SignupScreen] Auto-login successful for:', email);
         localStorage.removeItem('guestMode');
         localStorage.removeItem('guestVisits');
+
+        // Ensure a profile record exists (client-side upsert)
+        try {
+          await ensureProfileExists(signupData.session.user.id, signupData.session.user.email || email);
+        } catch (e) {
+          console.warn('[SignupScreen] Profile upsert after signup failed', e);
+        }
 
         if (!keepSignedIn) {
           const signOutOnClose = async () => {
@@ -117,8 +159,20 @@ export function SignupScreen() {
           password,
         });
 
+        if (signInError) {
+          console.debug('[SignupScreen] Fallback sign-in error:', signInError.message);
+        }
+
         if (!signInError && signInData?.session) {
           console.log('[SignupScreen] Fallback sign-in succeeded after signup for:', email);
+
+          // Ensure a profile record exists for the signed-in user
+          try {
+            await ensureProfileExists(signInData.session.user.id, signInData.session.user.email || email);
+          } catch (e) {
+            console.warn('[SignupScreen] Profile upsert after fallback sign-in failed', e);
+          }
+
           localStorage.removeItem('guestMode');
           localStorage.removeItem('guestVisits');
           if (!keepSignedIn) {
@@ -130,7 +184,7 @@ export function SignupScreen() {
           return;
         }
       } catch (err) {
-        console.debug('[SignupScreen] Fallback sign-in failed (email confirm likely required)');
+        console.debug('[SignupScreen] Fallback sign-in failed (email confirm likely required)', err);
       }
       
       // Otherwise, signup succeeded but requires email confirmation
