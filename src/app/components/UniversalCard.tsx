@@ -191,16 +191,24 @@ export function UniversalCard({
         <button
           onClick={async () => {
             try {
-              // Create PDF with QR code and title
-              const pdf = new jsPDF();
+              // Create PDF with QR code and title - 8x10 format
+              const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'in',
+                format: [8, 10]
+              });
               
-              // Add title
-              pdf.setFontSize(20);
-              pdf.text(title.slice(0, 40), 20, 30);
+              // Add title - centered and bolder
+              pdf.setFontSize(24);
+              pdf.setFont('helvetica', 'bold');
+              const titleWidth = pdf.getTextWidth(title.slice(0, 40));
+              const pageWidth = 8; // 8 inches
+              const titleX = (pageWidth - titleWidth / 72) / 2; // Convert points to inches and center
+              pdf.text(title.slice(0, 40), titleX * 72, 1.5 * 72); // 1.5 inches from top
               
-              // Add QR code as image
+              // Add QR code as image - 15% larger and centered
               const qrCanvas = document.createElement('canvas');
-              const qrSize = 150;
+              const qrSize = 150 * 1.15; // 15% larger than 150
               qrCanvas.width = qrSize;
               qrCanvas.height = qrSize;
               const qrCtx = qrCanvas.getContext('2d');
@@ -222,12 +230,20 @@ export function UniversalCard({
                     qrCtx.drawImage(img, 0, 0, qrSize, qrSize);
                     const qrDataUrl = qrCanvas.toDataURL('image/png');
                     
-                    // Add QR code to PDF
-                    pdf.addImage(qrDataUrl, 'PNG', 20, 50, 80, 80);
+                    // Add QR code to PDF - centered
+                    const qrWidth = 2.5; // 2.5 inches wide
+                    const qrHeight = 2.5; // 2.5 inches tall
+                    const qrX = (pageWidth - qrWidth) / 2; // Center horizontally
+                    const qrY = 3; // 3 inches from top
+                    pdf.addImage(qrDataUrl, 'PNG', qrX, qrY, qrWidth, qrHeight);
                     
-                    // Add card URL below QR code
-                    pdf.setFontSize(10);
-                    pdf.text(`Card URL: ${cardUrl}`, 20, 150);
+                    // Add card URL below QR code - centered
+                    pdf.setFontSize(12);
+                    pdf.setFont('helvetica', 'normal');
+                    const urlText = `Card URL: ${cardUrl}`;
+                    const urlWidth = pdf.getTextWidth(urlText);
+                    const urlX = (pageWidth - urlWidth / 72) / 2; // Center horizontally
+                    pdf.text(urlText, urlX * 72, (qrY + qrHeight + 0.5) * 72); // 0.5 inches below QR code
                     
                     // Save PDF
                     pdf.save(`nAnoCard-${id}.pdf`);
