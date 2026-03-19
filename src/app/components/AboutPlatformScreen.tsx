@@ -2,7 +2,7 @@ import { ArrowLeft, Zap, Globe, Lock, Layers, Code, Smartphone, HardDrive } from
 import { useNavigate } from "react-router";
 import { HamburgerMenu } from "./HamburgerMenu";
 import { useState, useEffect } from "react";
-import { supabase, API_BASE_URL, getAuthHeaders } from "../../lib/supabase";
+import { supabase, API_BASE_URL, getAuthHeaders } from "@/supabase";
 
 /**
  * AboutPlatformScreen - Platform overview

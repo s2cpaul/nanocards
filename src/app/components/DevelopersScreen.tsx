@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, Code, BookOpen, Key, Zap, Terminal, CheckCircle, ExternalLink, Crown } from "lucide-react";
 import { Button } from "./ui/button";
-import { API_BASE_URL, getAuthHeaders, supabase } from "../../lib/supabase";
+import { API_BASE_URL, getAuthHeaders, supabase } from "@/supabase";
 import { HamburgerMenu } from "./HamburgerMenu";
 
 export function DevelopersScreen() {

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { ArrowLeft, CreditCard, Lock, Check } from "lucide-react";
 import { Button } from "./ui/button";
-import { supabase, API_BASE_URL, getAuthHeaders } from "../../lib/supabase";
+import { supabase, API_BASE_URL, getAuthHeaders } from "@/supabase";
 import { toast } from "sonner";
 
 export function CheckoutScreen() {

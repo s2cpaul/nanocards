@@ -29,19 +29,19 @@ export function LandingPage() {
       <div className="flex justify-center pt-4 pb-6">
         <div className="inline-flex items-center gap-2 bg-gray-100 rounded-full p-1.5">
           <button
-            className="px-8 py-3 rounded-full text-sm font-semibold bg-[#1e3a8a] text-white transition-all"
+            className="px-4 py-2 rounded-full text-sm font-medium bg-[#1e3a8a] text-white transition-all"
           >
             Welcome
           </button>
           <button
             onClick={() => navigate("/subscription")}
-            className="px-8 py-3 rounded-full text-sm font-semibold text-gray-600 hover:text-gray-900 transition-all"
+            className="px-4 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-gray-900 transition-all"
           >
             Pricing
           </button>
           <button
             onClick={() => navigate("/app")}
-            className="px-8 py-3 rounded-full text-sm font-semibold text-gray-600 hover:text-gray-900 transition-all"
+            className="px-4 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-gray-900 transition-all"
           >
             Cards
           </button>

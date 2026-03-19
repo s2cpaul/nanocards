@@ -175,3 +175,62 @@ To run from source:
 # Go >= 1.22
 go run . help
 ```
+
+## Auth Setup
+
+Follow these steps to enable email+password signups with email confirmation for the app.
+
+Checklist (Supabase Dashboard)
+
+- Authentication → Settings
+  - Enable "Allow signups" (if you want public registrations)
+  - Enable "Email confirmations" (confirmations ON)
+  - Confirm the **Confirm signup** email template uses the token_hash flow and points to your app:
+    - Example template link: `https://nanocards.now/auth/confirm?token_hash={{ .TokenHash }}&type=signup`
+- Authentication → URL Configuration
+  - Site URL: `https://nanocards.now`
+  - Redirect URLs (add these):
+    - `https://nanocards.now`
+    - `http://localhost:5173`
+    - `http://localhost:5173/auth/confirm`
+    - `https://nanocards.now/auth/confirm`
+
+Environment variables (local / Vite)
+
+- Add to your `.env` or `.env.local` (restart dev server after editing):
+
+```
+VITE_SUPABASE_URL=https://lompxaggrcfmmsjkbgyt.supabase.co
+VITE_SUPABASE_ANON_KEY=<your-publishable-anon-key>
+```
+
+Optional (service-role key for server/admin actions):
+```
+SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
+```
+
+Install client SDK
+
+```bash
+npm i @supabase/supabase-js
+```
+
+Client usage notes
+
+- Use the public anon (publishable) key in browser code. Never expose the service-role key to clients.
+- The app contains a signup UI that calls `supabase.auth.signUp({ email, password })`. With the token_hash confirm template above, Supabase will email a link that lands at `/auth/confirm`.
+
+Confirm route behavior (app)
+
+- The app includes `/auth/confirm` which reads `token_hash` (and `type`) from the query and calls the Supabase verify endpoint (or SDK `verifyOtp`) to confirm the email, then redirects the user to `/login` (or `/app`).
+
+Testing flow
+
+1. Ensure env vars are set and dev server restarted: `npm run dev`.
+2. Sign up with a test email.
+3. Receive confirmation email and click link — you should land at `/auth/confirm` and see a success message, then be redirected to login.
+
+Security & troubleshooting
+
+- If confirmation does not complete: verify the Confirm signup template uses `{{ .TokenHash }}` (not `{{ .ConfirmationURL }}`) and that the redirect URL list includes your confirm route and localhost.
+- For automation or server-side creation of users (frictionless flow), use a server-side endpoint that calls the Admin REST API with `SUPABASE_SERVICE_ROLE_KEY`. Keep that key private.

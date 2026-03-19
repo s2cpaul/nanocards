@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase";
+import { supabase, projectId, publicAnonKey } from "@/supabase";
 import { Button } from "./ui/button";
 import { ArrowLeft, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router";
@@ -26,8 +26,7 @@ export function DebugScreen() {
   const checkStatus = async () => {
     setTesting(true);
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const hasAnonKey = !!import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const hasAnonKey = !!publicAnonKey;
       const supabaseUrl = `https://${projectId}.supabase.co`;
 
       // Try to get session

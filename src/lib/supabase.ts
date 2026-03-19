@@ -1,25 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { supabaseConfig } from '../config/supabase.config';
 
-// Get Supabase credentials from environment variables
-// Fallback to embedded config if env vars not available (for Vercel production builds)
-const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || supabaseConfig.projectId;
-const publicAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || supabaseConfig.anonKey;
+// Hardcoded Supabase credentials (do not use env vars per request)
+export const projectId = 'lompxaggrcfmmsjkbgyt';
+export const publicAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvbXB4YWdncmNmbW1zamtiZ3l0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODc3MDQsImV4cCI6MjA4OTM2MzcwNH0.3i1MYKC1yTRfgmyf_9_BvkeG4fxnFeYTvDxRfzkL1oM';
 
 // Validate that credentials are available
 if (!projectId || !publicAnonKey) {
-  console.error('[Supabase] Missing credentials:', {
-    projectId: projectId ? '✓' : '✗ Missing VITE_SUPABASE_PROJECT_ID',
-    publicAnonKey: publicAnonKey ? '✓' : '✗ Missing VITE_SUPABASE_ANON_KEY',
-  });
+  console.error('[Supabase] Missing credentials: projectId or publicAnonKey not set');
 } else {
   // Validate API key format (should be a JWT)
   if (!publicAnonKey.startsWith('eyJ')) {
     console.error('[Supabase] Invalid API key format - does not appear to be a valid JWT');
   }
-  console.log('[Supabase] Credentials loaded:', {
-    source: (import.meta.env.VITE_SUPABASE_PROJECT_ID ? 'env vars' : 'embedded config'),
+  console.log('[Supabase] Credentials loaded from hardcoded config', {
     projectId: projectId ? '✓' : '✗',
     publicAnonKeyLength: publicAnonKey?.length || 0,
     publicAnonKeyValid: publicAnonKey?.startsWith('eyJ') ? '✓' : '✗',

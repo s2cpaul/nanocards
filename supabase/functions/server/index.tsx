@@ -9,27 +9,25 @@ import {
   generateAuthenticationOptions,
   verifyAuthenticationResponse,
 } from "npm:@simplewebauthn/server@13";
-import Stripe from "npm:stripe@17";
 
-const app = new Hono();
+/* STRIPE INTEGRATION DISABLED - per user request
+   The Stripe import, client initialization, price IDs, and all Stripe-related route handlers
+   below have been commented out so the rest of the server remains functional. Stripe keys
+   remain in the repository (.env.local etc.) as requested.
+*/
+// import Stripe from "npm:stripe@17";
 
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-);
-
-// Initialize Stripe
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
-  apiVersion: '2024-11-20.acacia',
-});
+// const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
+//   apiVersion: '2024-11-20.acacia',
+// });
 
 // Stripe Price IDs for each tier
-const STRIPE_PRICES = {
-  student: Deno.env.get('STRIPE_STUDENT_PRICE_ID') ?? 'price_1TAyXQ2V9h6ApeDfuJYKNBR6',
-  creator: Deno.env.get('STRIPE_CREATOR_PRICE_ID') ?? 'price_1TAyXR2V9h6ApeDfvXEeEiHQ',
-  pro: Deno.env.get('STRIPE_PRO_PRICE_ID') ?? 'price_1TAyXS2V9h6ApeDf8qv5dWUQ',
-  enterprise: Deno.env.get('STRIPE_ENTERPRISE_PRICE_ID') ?? 'price_1TAyXT2V9h6ApeDf5EltqzAE',
-};
+// const STRIPE_PRICES = {
+//   student: Deno.env.get('STRIPE_STUDENT_PRICE_ID') ?? 'price_1TAyXQ2V9h6ApeDfuJYKNBR6',
+//   creator: Deno.env.get('STRIPE_CREATOR_PRICE_ID') ?? 'price_1TAyXR2V9h6ApeDfvXEeEiHQ',
+//   pro: Deno.env.get('STRIPE_PRO_PRICE_ID') ?? 'price_1TAyXS2V9h6ApeDf8qv5dWUQ',
+//   enterprise: Deno.env.get('STRIPE_ENTERPRISE_PRICE_ID') ?? 'price_1TAyXT2V9h6ApeDf5EltqzAE',
+// };
 
 // Enable logger
 app.use('*', logger(console.log));
@@ -385,7 +383,7 @@ app.get("/make-server-d91f8206/cards/liked", async (c) => {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const allCards = await kv.getByPrefix("card:");
+    const allCards = await kv.getByPrefix "card:";
     const likedCards = allCards.filter(card => 
       card.likedBy && card.likedBy.includes(user.id)
     ).map(card => card.id);
@@ -942,432 +940,21 @@ app.get("/make-server-d91f8206/user/profile", async (c) => {
   }
 });
 
-// Create Stripe Checkout Session
+/*
 app.post("/make-server-d91f8206/subscription/create-checkout", async (c) => {
-  try {
-    const authHeader = c.req.header("Authorization");
-    if (!authHeader) {
-      return c.json({ error: "Unauthorized - Please log in" }, 401);
-    }
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-
-    if (error || !user) {
-      console.error("Authorization error while creating checkout session:", error);
-      return c.json({ error: "Unauthorized - Invalid session" }, 401);
-    }
-
-    const body = await c.req.json();
-    const { tier, successUrl, cancelUrl } = body;
-
-    // Validate tier
-    if (!["student", "creator", "pro", "enterprise"].includes(tier)) {
-      return c.json({ error: "Invalid tier. Must be 'student', 'creator', 'pro', or 'enterprise'" }, 400);
-    }
-
-    // Get the appropriate price ID
-    const priceId = STRIPE_PRICES[tier as keyof typeof STRIPE_PRICES];
-    
-    if (!priceId || priceId.includes('placeholder')) {
-      console.error(`Missing Stripe Price ID for tier: ${tier}. Please configure STRIPE_${tier.toUpperCase()}_PRICE_ID environment variable.`);
-      return c.json({ 
-        error: `Payment configuration incomplete for ${tier} tier. Please contact support.`,
-        details: `Missing price ID for ${tier}`
-      }, 500);
-    }
-
-    // Get or create Stripe customer
-    let customerId: string;
-    const existingCustomer = await kv.get(`user:${user.id}:stripeCustomerId`);
-    
-    if (existingCustomer) {
-      customerId = existingCustomer;
-    } else {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: {
-          supabaseUserId: user.id,
-        },
-      });
-      customerId = customer.id;
-      await kv.set(`user:${user.id}:stripeCustomerId`, customerId);
-    }
-
-    // Create Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      mode: 'subscription',
-      success_url: successUrl || `${c.req.header('origin')}/app?upgrade=success`,
-      cancel_url: cancelUrl || `${c.req.header('origin')}/pricing?upgrade=cancelled`,
-      metadata: {
-        userId: user.id,
-        tier: tier,
-      },
-      subscription_data: {
-        metadata: {
-          userId: user.id,
-          tier: tier,
-        },
-      },
-    });
-
-    console.log(`Created Stripe checkout session for user ${user.email}, tier: ${tier}, sessionId: ${session.id}`);
-
-    return c.json({ 
-      sessionId: session.id,
-      url: session.url,
-    });
-  } catch (error) {
-    console.error("Error creating Stripe checkout session:", error);
-    return c.json({ 
-      error: "Failed to create checkout session",
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, 500);
-  }
+  // Stripe disabled: respond with 501 Not Implemented to clearly indicate disabled workflow
+  return c.json({ error: "Stripe integration disabled by repository request" }, 501);
 });
 
-// Stripe Webhook Handler
 app.post("/make-server-d91f8206/stripe/webhook", async (c) => {
-  try {
-    const signature = c.req.header("stripe-signature");
-    if (!signature) {
-      console.error("Missing Stripe signature header");
-      return c.json({ error: "Missing signature" }, 400);
-    }
-
-    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
-    if (!webhookSecret) {
-      console.error("STRIPE_WEBHOOK_SECRET not configured");
-      // Don't fail webhook if secret not configured yet
-      return c.json({ received: true });
-    }
-
-    const body = await c.req.text();
-    
-    let event;
-    try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    } catch (err) {
-      console.error("Webhook signature verification failed:", err);
-      return c.json({ error: "Invalid signature" }, 400);
-    }
-
-    console.log(`Received Stripe webhook event: ${event.type}`);
-
-    // Handle the event
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object;
-        const userId = session.metadata?.userId;
-        const tier = session.metadata?.tier;
-
-        if (userId && tier) {
-          // Create subscription record
-          const subscription = {
-            tier,
-            stripeSubscriptionId: session.subscription,
-            stripeCustomerId: session.customer,
-            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            createdAt: new Date().toISOString(),
-            active: true,
-          };
-
-          await kv.set(`user:${userId}:subscription`, subscription);
-          console.log(`Activated ${tier} subscription for user ${userId}`);
-        }
-        break;
-      }
-
-      case 'customer.subscription.updated': {
-        const subscription = event.data.object;
-        const userId = subscription.metadata?.userId;
-
-        if (userId) {
-          const existingSubscription = await kv.get(`user:${userId}:subscription`);
-          
-          if (existingSubscription) {
-            existingSubscription.active = subscription.status === 'active';
-            existingSubscription.stripeSubscriptionId = subscription.id;
-            
-            // Update expiration date based on current period end
-            if (subscription.current_period_end) {
-              existingSubscription.expiresAt = new Date(subscription.current_period_end * 1000).toISOString();
-            }
-            
-            await kv.set(`user:${userId}:subscription`, existingSubscription);
-            console.log(`Updated subscription for user ${userId}, status: ${subscription.status}`);
-          }
-        }
-        break;
-      }
-
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object;
-        const userId = subscription.metadata?.userId;
-
-        if (userId) {
-          const existingSubscription = await kv.get(`user:${userId}:subscription`);
-          
-          if (existingSubscription) {
-            existingSubscription.active = false;
-            existingSubscription.cancelledAt = new Date().toISOString();
-            await kv.set(`user:${userId}:subscription`, existingSubscription);
-            console.log(`Cancelled subscription for user ${userId}`);
-          }
-        }
-        break;
-      }
-
-      default:
-        console.log(`Unhandled event type: ${event.type}`);
-    }
-
-    return c.json({ received: true });
-  } catch (error) {
-    console.error("Error processing Stripe webhook:", error);
-    return c.json({ 
-      error: "Webhook processing failed",
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, 500);
-  }
+  // Stripe disabled: accept webhook but do nothing
+  return c.json({ received: true, message: "Stripe webhook endpoint disabled" });
 });
 
-// Upgrade subscription (now redirects to Stripe Checkout)
 app.post("/make-server-d91f8206/subscription/upgrade", async (c) => {
-  try {
-    const authHeader = c.req.header("Authorization");
-    if (!authHeader) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-
-    if (error || !user) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-
-    const body = await c.req.json();
-    const { tier, paymentDetails } = body;
-
-    // Validate tier
-    if (!["student", "creator", "pro", "enterprise"].includes(tier)) {
-      return c.json({ error: "Invalid tier" }, 400);
-    }
-
-    // Handle student tier (free upgrade for verified emails)
-    if (tier === "student") {
-      const email = user.email?.toLowerCase() || "";
-      const freeDomains = ['.edu', '.k12.', '.mil', '@oratf.info'];
-      const isEligible = freeDomains.some(domain => email.includes(domain));
-
-      if (!isEligible) {
-        return c.json({ 
-          error: "Not eligible for student plan. Must use .edu, .k12, .mil, or @oratf.info email" 
-        }, 403);
-      }
-
-      const subscription = {
-        tier: "student",
-        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year
-        createdAt: new Date().toISOString(),
-        active: true,
-      };
-
-      await kv.set(`user:${user.id}:subscription`, subscription);
-      console.log(`User ${user.email} activated free student tier`);
-
-      return c.json({ 
-        success: true,
-        tier: "student",
-        expiresAt: subscription.expiresAt,
-        message: "Student plan activated successfully"
-      });
-    }
-
-    // If payment details are provided, process direct payment
-    if (paymentDetails) {
-      console.log(`Processing direct payment for user: ${user.email}, tier: ${tier}`);
-      
-      // Get or create Stripe customer
-      let customerId: string;
-      const existingCustomer = await kv.get(`user:${user.id}:stripeCustomerId`);
-      
-      if (existingCustomer) {
-        customerId = existingCustomer;
-        console.log(`Using existing Stripe customer: ${customerId}`);
-      } else {
-        console.log(`Creating new Stripe customer for user: ${user.email}`);
-        const customer = await stripe.customers.create({
-          email: user.email,
-          metadata: {
-            supabaseUserId: user.id,
-          },
-        });
-        customerId = customer.id;
-        await kv.set(`user:${user.id}:stripeCustomerId`, customerId);
-        console.log(`Created new Stripe customer: ${customerId}`);
-      }
-
-      // Create payment method from card details
-      try {
-        const paymentMethod = await stripe.paymentMethods.create({
-          type: 'card',
-          card: {
-            number: paymentDetails.cardNumber,
-            exp_month: parseInt(paymentDetails.expiryDate.split('/')[0]),
-            exp_year: parseInt('20' + paymentDetails.expiryDate.split('/')[1]),
-            cvc: paymentDetails.cvv,
-          },
-          billing_details: {
-            name: paymentDetails.cardName,
-            address: {
-              postal_code: paymentDetails.billingZip,
-            },
-          },
-        });
-
-        // Attach payment method to customer
-        await stripe.paymentMethods.attach(paymentMethod.id, {
-          customer: customerId,
-        });
-
-        // Set as default payment method
-        await stripe.customers.update(customerId, {
-          invoice_settings: {
-            default_payment_method: paymentMethod.id,
-          },
-        });
-
-        // Get the price ID for the tier
-        const priceId = STRIPE_PRICES[tier as keyof typeof STRIPE_PRICES];
-        
-        if (!priceId || priceId.includes('placeholder')) {
-          console.error(`Invalid price ID for tier ${tier}: ${priceId}`);
-          return c.json({ 
-            error: `Payment system not configured for ${tier} tier. Please contact support.`,
-            details: 'Stripe price ID is not configured'
-          }, 500);
-        }
-
-        // Create subscription
-        const subscription = await stripe.subscriptions.create({
-          customer: customerId,
-          items: [{ price: priceId }],
-          metadata: {
-            userId: user.id,
-            tier: tier,
-          },
-          expand: ['latest_invoice.payment_intent'],
-        });
-
-        console.log(`Created subscription ${subscription.id} for user ${user.email}`);
-
-        // Update user subscription in database
-        const subscriptionData = {
-          tier: tier,
-          stripeSubscriptionId: subscription.id,
-          expiresAt: new Date(subscription.current_period_end * 1000).toISOString(),
-          createdAt: new Date().toISOString(),
-          active: true,
-        };
-
-        await kv.set(`user:${user.id}:subscription`, subscriptionData);
-
-        return c.json({ 
-          success: true,
-          tier: tier,
-          subscriptionId: subscription.id,
-          expiresAt: subscriptionData.expiresAt,
-        });
-      } catch (paymentError) {
-        console.error("Error processing payment:", paymentError);
-        return c.json({ 
-          error: "Payment failed. Please check your card details and try again.",
-          details: paymentError instanceof Error ? paymentError.message : 'Unknown error'
-        }, 400);
-      }
-    }
-
-    // If no payment details, create Stripe checkout session (redirect flow)
-    const priceId = STRIPE_PRICES[tier as keyof typeof STRIPE_PRICES];
-    
-    console.log(`Processing checkout for tier: ${tier}, priceId: ${priceId}`);
-    
-    if (!priceId || priceId.includes('placeholder')) {
-      console.error(`Invalid price ID for tier ${tier}: ${priceId}`);
-      return c.json({ 
-        error: `Payment system not configured for ${tier} tier. Please contact support.`,
-        details: 'Stripe price ID is not configured'
-      }, 500);
-    }
-
-    // Get or create Stripe customer
-    let customerId: string;
-    const existingCustomer = await kv.get(`user:${user.id}:stripeCustomerId`);
-    
-    if (existingCustomer) {
-      customerId = existingCustomer;
-      console.log(`Using existing Stripe customer: ${customerId}`);
-    } else {
-      console.log(`Creating new Stripe customer for user: ${user.email}`);
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: {
-          supabaseUserId: user.id,
-        },
-      });
-      customerId = customer.id;
-      await kv.set(`user:${user.id}:stripeCustomerId`, customerId);
-      console.log(`Created new Stripe customer: ${customerId}`);
-    }
-
-    // Create Checkout Session
-    console.log(`Creating Stripe checkout session for customer: ${customerId}, price: ${priceId}`);
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      mode: 'subscription',
-      success_url: `${c.req.header('origin')}/app?upgrade=success&tier=${tier}`,
-      cancel_url: `${c.req.header('origin')}/subscription?upgrade=cancelled`,
-      metadata: {
-        userId: user.id,
-        tier: tier,
-      },
-      subscription_data: {
-        metadata: {
-          userId: user.id,
-          tier: tier,
-        },
-      },
-    });
-
-    console.log(`Created Stripe checkout session for user ${user.email}, tier: ${tier}`);
-
-    return c.json({ 
-      checkoutUrl: session.url,
-      sessionId: session.id,
-    });
-  } catch (error) {
-    console.error("Error upgrading subscription:", error);
-    return c.json({ 
-      error: "Failed to create checkout session",
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, 500);
-  }
+  return c.json({ error: "Stripe integration disabled by repository request" }, 501);
 });
+*/
 
 // Get API key for the current user
 app.get("/make-server-d91f8206/api-key", async (c) => {
@@ -1395,6 +982,419 @@ app.get("/make-server-d91f8206/api-key", async (c) => {
     const apiKeyData = await kv.get(`user:${user.id}:apikey`);
     
     if (!apiKeyData) {
+      return c.json({ apiKey: null });
+    }
+
+    return c.json({ 
+      apiKey: apiKeyData.key,
+      createdAt: apiKeyData.createdAt
+    });
+  } catch (error) {
+    console.error("Error fetching API key:", error);
+    return c.json({ error: "Failed to fetch API key" }, 500);
+  }
+});
+
+// Generate new API key for the current user
+app.post("/make-server-d91f8206/api-key/generate", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    if (authError || !user) {
+      console.error("Authorization error while generating API key:", authError);
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    // Check if user has access (Creator or Pro)
+    const subscription = await kv.get(`user:${user.id}:subscription`);
+    const userTier = subscription?.tier || 'free';
+    
+    if (userTier !== 'creator' && userTier !== 'pro') {
+      return c.json({ error: "API key access requires Creator or Pro subscription" }, 403);
+    }
+
+    // Check if user already has an API key
+    const existingKey = await kv.get(`user:${user.id}:apikey`);
+    if (existingKey) {
+      return c.json({ error: "API key already exists. Use regenerate endpoint to create a new key." }, 400);
+    }
+
+    // Generate a secure random API key
+    const randomBytes = new Uint8Array(32);
+    crypto.getRandomValues(randomBytes);
+    const apiKey = `nano_${Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('')}`;
+
+    const apiKeyData = {
+      key: apiKey,
+      userId: user.id,
+      userEmail: user.email,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Store API key
+    await kv.set(`user:${user.id}:apikey`, apiKeyData);
+    // Also store reverse lookup for API key validation
+    await kv.set(`apikey:${apiKey}`, { userId: user.id });
+
+    console.log(`Generated API key for user ${user.email}`);
+
+    return c.json({ 
+      apiKey: apiKey,
+      createdAt: apiKeyData.createdAt
+    });
+  } catch (error) {
+    console.error("Error generating API key:", error);
+    return c.json({ error: "Failed to generate API key" }, 500);
+  }
+});
+
+// Regenerate API key for the current user
+app.post("/make-server-d91f8206/api-key/regenerate", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    if (authError || !user) {
+      console.error("Authorization error while regenerating API key:", authError);
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    // Check if user has access (Creator or Pro)
+    const subscription = await kv.get(`user:${user.id}:subscription`);
+    const userTier = subscription?.tier || 'free';
+    
+    if (userTier !== 'creator' && userTier !== 'pro') {
+      return c.json({ error: "API key access requires Creator or Pro subscription" }, 403);
+    }
+
+    // Delete old API key reverse lookup if exists
+    const oldKeyData = await kv.get(`user:${user.id}:apikey`);
+    if (oldKeyData?.key) {
+      await kv.del(`apikey:${oldKeyData.key}`);
+    }
+
+    // Generate a new secure random API key
+    const randomBytes = new Uint8Array(32);
+    crypto.getRandomValues(randomBytes);
+    const apiKey = `nano_${Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('')}`;
+
+    const apiKeyData = {
+      key: apiKey,
+      userId: user.id,
+      userEmail: user.email,
+      createdAt: new Date().toISOString(),
+      regeneratedAt: new Date().toISOString(),
+    };
+
+    // Store new API key
+    await kv.set(`user:${user.id}:apikey`, apiKeyData);
+    // Store reverse lookup for API key validation
+    await kv.set(`apikey:${apiKey}`, { userId: user.id });
+
+    console.log(`Regenerated API key for user ${user.email}`);
+
+    return c.json({ 
+      apiKey: apiKey,
+      createdAt: apiKeyData.createdAt
+    });
+  } catch (error) {
+    console.error("Error regenerating API key:", error);
+    return c.json({ error: "Failed to regenerate API key" }, 500);
+  }
+});
+
+// Generate a secure random password
+function generateSecurePassword(): string {
+  const length = 16;
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?";
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+  let password = "";
+  for (let i = 0; i < length; i++) {
+    password += charset[array[i] % charset.length];
+  }
+  return password;
+}
+
+// Generate organization ID from email domain and Julian date/time
+// Format: {domain}{JulianDay}{HHMM}
+// Example: ubar.com on day 246 at 11:12 → ubar2461112
+function generateOrgId(email: string): string {
+  // Extract domain from email
+  const domain = email.split('@')[1] || email;
+  const domainPrefix = domain.split('.')[0].toLowerCase(); // e.g., "ubar" from "ubar.com"
+  
+  // Get current date/time
+  const now = new Date();
+  
+  // Calculate Julian day (day of year, 1-366)
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = now.getTime() - start.getTime();
+  const oneDay = 1000 * 60 * 60 * 24;
+  const julianDay = Math.floor(diff / oneDay);
+  
+  // Get time in HHMM format
+  const hours = now.getHours().toString().padStart(2, '0');
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const timeCode = `${hours}${minutes}`;
+  
+  // Combine: domain + julian day + time
+  const orgId = `${domainPrefix}${julianDay}${timeCode}`;
+  
+  console.log(`[generateOrgId] Generated org ID: ${orgId} for email: ${email}`);
+  console.log(`[generateOrgId] - Domain prefix: ${domainPrefix}`);
+  console.log(`[generateOrgId] - Julian day: ${julianDay}`);
+  console.log(`[generateOrgId] - Time code: ${timeCode}`);
+  
+  return orgId;
+}
+
+// Auth endpoint for user signup
+app.post("/make-server-d91f8206/auth/signup", async (c) => {
+  try {
+    const { email, password, displayName } = await c.req.json();
+
+    // Validate input
+    if (!email || !password) {
+      return c.json({ error: "Email and password are required" }, 400);
+    }
+
+    if (password.length < 6) {
+      return c.json({ error: "Password must be at least 6 characters" }, 400);
+    }
+
+    console.log(`[POST /auth/signup] Creating account for ${email}`);
+
+    // Create user with Supabase Auth
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      user_metadata: {
+        display_name: displayName || email.split("@")[0],
+      },
+      email_confirm: true, // Auto-confirm email
+    });
+
+    if (error) {
+      console.error("[POST /auth/signup] Error creating user:", error);
+      return c.json({ error: error.message }, 400);
+    }
+
+    if (!data.user) {
+      return c.json({ error: "Failed to create user" }, 500);
+    }
+
+    console.log(`[POST /auth/signup] Account created successfully for ${email}`);
+
+    // Create user profile in public.users table
+    const { error: profileError } = await supabase
+      .from("users")
+      .insert({
+        id: data.user.id,
+        email: data.user.email,
+        display_name: displayName || email.split("@")[0],
+        subscription_tier: "free",
+        points: 0,
+        created_at: new Date().toISOString(),
+      });
+
+    if (profileError) {
+      console.error("[POST /auth/signup] Error creating user profile:", profileError);
+      // User created but profile creation failed - still return success
+      // as the user can be recovered
+    }
+
+    // Store initial subscription info in KV store for card limit checking
+    const newSubscription = {
+      tier: "free",
+      status: "active",
+      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year
+      createdAt: new Date().toISOString(),
+    };
+    await kv.set(`user:${data.user.id}:subscription`, newSubscription);
+    
+    // Initialize card count to 0
+    await kv.set(`user:${data.user.id}:cardCount`, 0);
+    
+    // Initialize points to 0
+    await kv.set(`user:${data.user.id}:points`, 0);
+
+    console.log(`[POST /auth/signup] Subscription and profile initialized for ${email}`);
+
+    return c.json({
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+        display_name: displayName || email.split("@")[0],
+      },
+      message: "Account created successfully",
+    });
+  } catch (error: any) {
+    console.error("[POST /auth/signup] Error:", error);
+    return c.json({ error: error?.message || "Failed to create account" }, 500);
+  }
+});
+
+// Admin endpoint to create user account with secure random password
+app.post("/make-server-d91f8206/admin/create-account", async (c) => {
+  try {
+    const { email, name } = await c.req.json();
+    
+    if (!email) {
+      return c.json({ error: "Email is required" }, 400);
+    }
+
+    // Generate secure random password
+    const randomPassword = generateSecurePassword();
+    
+    console.log(`[POST /admin/create-account] Creating account for ${email}`);
+    console.log(`[POST /admin/create-account] Generated secure password (will NOT be emailed to user)`);
+
+    // Create user in Supabase Auth with auto-confirmed email
+    const { data, error } = await supabase.auth.admin.createUser({
+      email: email,
+      password: randomPassword,
+      user_metadata: { 
+        name: name || email.split('@')[0],
+        passwordChangeRequired: true,
+        passwordChangeRecommendedBy: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+        accountCreatedAt: new Date().toISOString()
+      },
+      // Automatically confirm the user's email since an email server hasn't been configured.
+      email_confirm: true
+    });
+
+    if (error) {
+      console.error(`[POST /admin/create-account] Error creating user:`, error);
+      return c.json({ error: error.message }, 400);
+    }
+
+    // Store user profile in KV store
+    await kv.set(`user:${data.user.id}`, {
+      id: data.user.id,
+      email: email,
+      name: name || email.split('@')[0],
+      points: 0,
+      tier: 'free',
+      createdAt: new Date().toISOString(),
+      passwordChangeRequired: true,
+      passwordChangeRecommendedBy: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    });
+
+    console.log(`[POST /admin/create-account] Account created successfully for ${email}`);
+    console.log(`[POST /admin/create-account] User should change password within 30 days`);
+
+    return c.json({ 
+      success: true,
+      user: {
+        id: data.user.id,
+        email: email,
+        name: name || email.split('@')[0],
+      },
+      message: "Account created successfully. User will receive a welcome email with instructions to set their password.",
+      temporaryPassword: randomPassword, // Only returned in this response, never emailed
+      passwordChangeRecommendedBy: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    }, 201);
+  } catch (error) {
+    console.error("[POST /admin/create-account] Error:", error);
+    return c.json({ error: "Failed to create account" }, 500);
+  }
+});
+
+// Admin endpoint to create organization account with auto-generated org ID
+app.post("/make-server-d91f8206/admin/create-org-account", async (c) => {
+  try {
+    const { email, name, organizationName } = await c.req.json();
+    
+    if (!email) {
+      return c.json({ error: "Email is required" }, 400);
+    }
+
+    // Generate organization ID from email and Julian date/time
+    const orgId = generateOrgId(email);
+    
+    // Check if org ID already exists
+    const existingOrg = await kv.get(`org:${orgId}`);
+    if (existingOrg) {
+      console.error(`[POST /admin/create-org-account] Org ID ${orgId} already exists`);
+      return c.json({ 
+        error: `Organization ID ${orgId} already exists. Please try again in a few minutes.`,
+        existingOrgId: orgId
+      }, 409);
+    }
+
+    // Use org ID as the initial password for easy team access
+    const initialPassword = orgId;
+    
+    console.log(`[POST /admin/create-org-account] Creating organization account for ${email}`);
+    console.log(`[POST /admin/create-org-account] Generated org ID: ${orgId}`);
+    console.log(`[POST /admin/create-org-account] Using org ID as initial password for team access`);
+
+    // Create user in Supabase Auth with auto-confirmed email
+    const { data, error } = await supabase.auth.admin.createUser({
+      email: email,
+      password: initialPassword,
+      user_metadata: { 
+        name: name || email.split('@')[0],
+        organizationName: organizationName || '',
+        orgId: orgId,
+        accountType: 'organization',
+        passwordChangeRequired: true,
+        passwordChangeRecommendedBy: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        accountCreatedAt: new Date().toISOString()
+      },
+      // Automatically confirm the user's email since an email server hasn't been configured.
+      email_confirm: true
+    });
+
+    if (error) {
+      console.error(`[POST /admin/create-org-account] Error creating user:`, error);
+      return c.json({ error: error.message }, 400);
+    }
+
+    // Extract domain prefix for organization grouping
+    const domain = email.split('@')[1] || email;
+    const orgPrefix = domain.split('.')[0].toLowerCase(); // e.g., "ubar" from "ubar.com"
+
+    // Store organization profile in KV store
+    await kv.set(`org:${orgId}`, {
+      orgId: orgId,
+      orgPrefix: orgPrefix, // For filtering by org name (e.g., "ubar")
+      userId: data.user.id,
+      email: email,
+      name: organizationName || name || email.split('@')[0],
+      contactName: name || '',
+      points: 0,
+      tier: 'free',
+      accountType: 'organization',
+      createdAt: new Date().toISOString(),
+      teamMembers: [],
+      cardCount: 0,
+    });
+
+    // Store user profile in KV store with org reference
+    await kv.set(`user:${data.user.id}`, {
+      id: data.user.id,
+      email: email,
+      name: name || email.split('@')[0],
+      orgId: orgId,
+      orgPrefix: orgPrefix,
+      accountType: 'organization',
+      points: 0,
+      tier: 'free',
+      createdAt: new Date().toISOString(),
+      passwordChangeRequired: true,
+      passwordChangeRecommendedBy: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    });
+
+    // Create reverse lookup: userId -> orgId
       return c.json({ apiKey: null });
     }
 

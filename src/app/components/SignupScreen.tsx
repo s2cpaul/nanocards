@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "./ui/button";
-import { supabase, getCurrentSession } from "../../lib/supabase";
+import { supabase, getCurrentSession } from "../../supabase";
 import { toast } from "sonner";
 import { Mail, Lock, User, Loader2, ArrowLeft, Eye, EyeOff, Check, X, RefreshCw } from "lucide-react";
 
@@ -126,8 +126,7 @@ export function SignupScreen() {
       // If a session is returned (email confirmation not required), auto-login succeeded
       if (signupData?.session) {
         console.log('[SignupScreen] Auto-login successful for:', email);
-        localStorage.removeItem('guestMode');
-        localStorage.removeItem('guestVisits');
+        try { localStorage.removeItem('guestMode'); localStorage.removeItem('guestVisits'); } catch (e) { }
 
         // Ensure a profile record exists (client-side upsert)
         try {
@@ -173,8 +172,7 @@ export function SignupScreen() {
             console.warn('[SignupScreen] Profile upsert after fallback sign-in failed', e);
           }
 
-          localStorage.removeItem('guestMode');
-          localStorage.removeItem('guestVisits');
+          try { localStorage.removeItem('guestMode'); localStorage.removeItem('guestVisits'); } catch (e) { }
           if (!keepSignedIn) {
             const signOutOnClose = async () => { try { await supabase.auth.signOut(); } catch (e) { console.error('Error signing out on close:', e); } };
             window.addEventListener('beforeunload', signOutOnClose);

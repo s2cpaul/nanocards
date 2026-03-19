@@ -8,7 +8,7 @@ import { Check, X as XIcon, ChevronLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { GlobalHeader } from "./GlobalHeader";
-import { supabase, API_BASE_URL, getAuthHeaders } from "../../lib/supabase";
+import { supabase, API_BASE_URL, getAuthHeaders } from "@/supabase";
 import { UI_TEXT } from "../constants";
 
 export function SubscriptionScreen() {

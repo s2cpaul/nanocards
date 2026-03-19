@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
-import { supabase, getCurrentSession } from "../../lib/supabase";
+import { supabase, getCurrentSession } from "@/supabase";
 import { toast } from "sonner";
 import { Mail, Lock, Loader2, ArrowLeft } from "lucide-react";
 
@@ -90,11 +90,13 @@ export function LoginScreen() {
       }
       
       if (data.session) {
+        // Clear guest mode immediately so app shows authenticated profile instead of Guest Mode
+        try {
+          localStorage.removeItem('guestMode');
+          localStorage.removeItem('guestVisits');
+        } catch (e) { /* ignore */ }
+
         console.log('[LoginScreen] Login successful for:', email);
-        // Clear guest mode - user is now authenticated
-        localStorage.removeItem('guestMode');
-        localStorage.removeItem('guestVisits');
-        
         toast.success(`Welcome back, ${email.split('@')[0]}!`);
         
         // Redirect to app with replace to prevent back button going to login

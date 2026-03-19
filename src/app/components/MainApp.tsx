@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { NanoCard } from "../types";
 import { UniversalCard } from "./UniversalCard";
 import { GlobalHeader } from "./GlobalHeader";
-import { supabase, API_BASE_URL, getAuthHeaders, getCurrentSession, initializeAuth } from "../../lib/supabase";
+import { supabase, API_BASE_URL, getAuthHeaders, getCurrentSession, initializeAuth } from "@/supabase";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { WelcomeModal } from "./WelcomeModal";

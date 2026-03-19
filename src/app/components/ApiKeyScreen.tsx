@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, Key, Copy, Eye, EyeOff, RefreshCw, AlertTriangle, CheckCircle, Crown, Code } from "lucide-react";
 import { Button } from "./ui/button";
-import { API_BASE_URL, getAuthHeaders, supabase } from "../../lib/supabase";
+import { API_BASE_URL, getAuthHeaders, supabase } from "@/supabase";
 import { HamburgerMenu } from "./HamburgerMenu";
 import { toast } from "sonner";
 

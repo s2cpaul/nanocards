@@ -5,7 +5,7 @@ import { ArrowLeft, Sparkles, Video, LinkIcon, TrendingUp, QrCode, Download, Sha
 import { HamburgerMenu } from "./HamburgerMenu";
 import { GlobalHeader } from "./GlobalHeader";
 import { useState, useEffect } from "react";
-import { supabase, API_BASE_URL, getAuthHeaders } from "../../lib/supabase";
+import { supabase, API_BASE_URL, getAuthHeaders } from "../../supabase";
 
 export function InstructionsScreen() {
   const navigate = useNavigate();

@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { toast } from "sonner";
-import { API_BASE_URL, getAuthHeaders, supabase } from "../../lib/supabase";
+import { API_BASE_URL, getAuthHeaders, supabase } from "@/supabase";
 import { STAGES } from "../constants/stages";
 import { HamburgerMenu } from "./HamburgerMenu";
 

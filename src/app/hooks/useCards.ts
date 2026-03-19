@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { NanoCard } from "../types";
-import { API_BASE_URL, getAuthHeaders } from "../../lib/supabase";
+import { API_BASE_URL, getAuthHeaders } from "@/supabase";
 import { toast } from "sonner";
 
 /**

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { Trash2, RefreshCw, AlertTriangle, ArrowLeft } from "lucide-react";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
-import { supabase, API_BASE_URL, getAuthHeaders } from "../../lib/supabase";
+import { supabase, API_BASE_URL, getAuthHeaders } from "@/supabase";
 import { NanoCard } from "../types";
 import { InitFeaturedCard } from "./InitFeaturedCard";
 

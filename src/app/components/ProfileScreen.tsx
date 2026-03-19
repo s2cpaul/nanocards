@@ -31,7 +31,7 @@ import { HamburgerMenu } from "./HamburgerMenu";
 import { GlobalHeader } from "./GlobalHeader";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { supabase, API_BASE_URL, getAuthHeaders } from "../../lib/supabase";
+import { supabase, API_BASE_URL, getAuthHeaders } from "@/supabase";
 
 /**
  * Profile screen component - displays user info, stats, and settings

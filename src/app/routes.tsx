@@ -4,11 +4,12 @@ import { lazy, Suspense } from "react";
 // Eager load critical components
 import { LandingPage } from "./components/LandingPage";
 import { LoginScreen } from "./components/LoginScreen";
-import { SignupScreen } from "./components/SignupScreen";
 import { DebugScreen } from "./components/DebugScreen";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { NotFound } from "./components/NotFound";
 import { MainApp } from "./components/MainApp";
+import { SimpleSignup } from "./components/SimpleSignup";
+import Signup from "../Signup";
 
 // Lazy load other components
 const AccountScreen = lazy(() => import("./components/AccountScreen").then(m => ({ default: m.AccountScreen })));
@@ -31,7 +32,6 @@ const QuickEdit = lazy(() => import("./components/QuickEdit").then(m => ({ defau
 const DevelopersScreen = lazy(() => import("./components/DevelopersScreen").then(m => ({ default: m.DevelopersScreen })));
 const ApiKeyScreen = lazy(() => import("./components/ApiKeyScreen").then(m => ({ default: m.ApiKeyScreen })));
 const AboutPlatformScreen = lazy(() => import("./components/AboutPlatformScreen").then(m => ({ default: m.AboutPlatformScreen })));
-const TopCardsScreen = lazy(() => import("./components/TopCardsScreen").then(m => ({ default: m.TopCardsScreen })));
 const EditCardScreen = lazy(() => import("./components/EditCardScreen").then(m => ({ default: m.EditCardScreen })));
 const CardDetailView = lazy(() => import("./components/CardDetailView").then(m => ({ default: m.CardDetailView })));
 const TrainingDetailView = lazy(() => import("./components/TrainingDetailView").then(m => ({ default: m.TrainingDetailView })));
@@ -39,6 +39,9 @@ const AdminCreateAccount = lazy(() => import("./pages/AdminCreateAccount").then(
 const AdminRestoreCards = lazy(() => import("./components/AdminRestoreCards").then(m => ({ default: m.AdminRestoreCards })));
 const AdminCardManager = lazy(() => import("./components/AdminCardManager").then(m => ({ default: m.AdminCardManager })));
 const SessionDiagnostic = lazy(() => import("./components/SessionDiagnostic").then(m => ({ default: m.SessionDiagnostic })));
+const AuthCallback = lazy(() => import("./pages/AuthCallback").then(m => ({ default: m.default })));
+const AuthConfirmPage = lazy(() => import("../pages/AuthConfirmPage").then(m => ({ default: m.default })));
+
 
 function LoadingScreen() {
   return (
@@ -72,7 +75,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/signup",
-    Component: SignupScreen,
+    element: <Signup />,
     errorElement: <ErrorBoundary />,
   },
   {
@@ -93,11 +96,6 @@ export const router = createBrowserRouter([
   {
     path: "/account",
     element: <LazyComponent component={AccountScreen} />,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/top-cards",
-    element: <LazyComponent component={TopCardsScreen} />,
     errorElement: <ErrorBoundary />,
   },
   {
@@ -228,6 +226,16 @@ export const router = createBrowserRouter([
   {
     path: "/module/:moduleId",
     element: <LazyComponent component={TrainingDetailView} />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/auth/callback",
+    element: <LazyComponent component={AuthCallback} />,
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: "/auth/confirm",
+    element: <LazyComponent component={AuthConfirmPage} />,
     errorElement: <ErrorBoundary />,
   },
   {

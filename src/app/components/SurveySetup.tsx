@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { HamburgerMenu } from "./HamburgerMenu";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "@/supabase";
 
 type QuestionType = "multiple-choice" | "true-false";
 

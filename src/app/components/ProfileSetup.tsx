@@ -6,7 +6,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { toast } from "sonner";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../supabase";
 const profilePlaceholder = "";
 
 export function ProfileSetup() {

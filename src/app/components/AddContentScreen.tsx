@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { Input } from "./ui/input";
 import { HamburgerMenu } from "./HamburgerMenu";
-import { supabase, API_BASE_URL, getAuthHeaders } from "../../lib/supabase";
+import { supabase, API_BASE_URL, getAuthHeaders } from "@/supabase";
 import { SurveySetup } from "./SurveySetup";
 
 interface ContentType {
@@ -194,8 +194,10 @@ export function AddContentScreen() {
   };
 
   const handleAddContent = (contentId: string) => {
+    console.log('[AddContentScreen] handleAddContent called with', contentId);
     if (contentId === 'quiz') {
       // Open inline quiz builder
+      console.log('[AddContentScreen] opening quiz builder');
       setShowQuizBuilder(true);
       // seed with one question if empty
       if (quizQuestions.length === 0) addQuestion('mc');
@@ -203,12 +205,14 @@ export function AddContentScreen() {
     }
 
     if (contentId === 'survey') {
+      console.log('[AddContentScreen] opening survey inline');
       // Open the Survey Setup inline panel
       setShowSurveyInline(true);
       return;
     }
 
     if (contentId === 'drag-drop') {
+      console.log('[AddContentScreen] opening drag & drop builder');
       // Open inline drag & drop builder and seed with two items if empty
       setShowDragDropBuilder(true);
       if (dragItems.length === 1 && !dragItems.some(i => i.label || i.definition)) {
@@ -221,6 +225,7 @@ export function AddContentScreen() {
     }
 
     // Navigate to create card page for other content types
+    console.log('[AddContentScreen] navigating to create for', contentId);
     navigate('/create');
   };
 
@@ -287,6 +292,7 @@ export function AddContentScreen() {
                     </div>
                     <button
                       onClick={() => handleAddContent(item.id)}
+                      type="button"
                       className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1 transition-colors"
                     >
                       + Add

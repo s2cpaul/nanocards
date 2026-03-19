@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { API_BASE_URL, getAuthHeaders } from "../../lib/supabase";
+import { API_BASE_URL, getAuthHeaders } from "@/supabase";
 import { toast } from "sonner";
 import { Trash2, RefreshCw } from "lucide-react";
 

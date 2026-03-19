@@ -29,7 +29,7 @@ import {
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { HamburgerMenu } from "./HamburgerMenu";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "@/supabase";
 
 interface ContentOption {
   id: string;

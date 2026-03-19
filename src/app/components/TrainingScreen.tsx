@@ -27,7 +27,7 @@ import {
   Trash2,
   Save,
 } from "lucide-react";
-import { API_BASE_URL, getAuthHeaders, supabase } from "../../lib/supabase";
+import { API_BASE_URL, getAuthHeaders, supabase } from "@/supabase";
 import { toast } from "sonner";
 import { HamburgerMenu } from "./HamburgerMenu";
 import { GlobalHeader } from "./GlobalHeader";

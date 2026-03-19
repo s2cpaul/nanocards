@@ -4,7 +4,7 @@ import { ArrowLeft, Plus, Trash2, Info } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { HamburgerMenu } from "./HamburgerMenu";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "@/supabase";
 import {
   Select,
   SelectContent,

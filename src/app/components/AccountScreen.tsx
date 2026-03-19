@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { GlobalHeader } from "./GlobalHeader";
-import { supabase, API_BASE_URL, getAuthHeaders } from "../../lib/supabase";
+import { supabase, API_BASE_URL, getAuthHeaders } from "@/supabase";
 import { User, Mail, Calendar, Heart, FileText, LogOut, Loader2, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";

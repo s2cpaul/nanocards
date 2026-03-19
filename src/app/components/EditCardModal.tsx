@@ -1,7 +1,7 @@
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
-import { API_BASE_URL, getAuthHeaders } from "../../lib/supabase";
-import { supabase } from "../../lib/supabase";
+import { API_BASE_URL, getAuthHeaders } from "@/supabase";
+import { supabase } from "@/supabase";
 
 interface EditCardModalProps {
   isOpen: boolean;

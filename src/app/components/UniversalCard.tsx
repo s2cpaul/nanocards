@@ -90,8 +90,10 @@ export function UniversalCard({
     14: 'text-[14px]',
     13: 'text-[13px]',
     12: 'text-[12px]',
+    11: 'text-[11px]',
+    10: 'text-[10px]',
   };
-  const clampedTitleSize = Math.max(12, Math.min(20, Math.round(titleFontSizePx)));
+  const clampedTitleSize = Math.max(10, Math.min(20, Math.round(titleFontSizePx)));
   const titleSizeClass = FONT_CLASS_BY_SIZE[clampedTitleSize] || 'text-[16px]';
 
   // NEW: parsed total seconds and remaining countdown state
@@ -160,8 +162,9 @@ export function UniversalCard({
       const isMobile = window.matchMedia('(max-width: 640px)').matches;
 
       // start from a sensible base and shrink until fits or min reached
-      let size = isMobile ? 18 : 20; // start slightly smaller on mobile
-      const minSize = isMobile ? 11 : 12; // allow smaller minimum on mobile
+      // Use smaller starting size on mobile to increase chance of single-line fit
+      let size = isMobile ? 16 : 20;
+      const minSize = isMobile ? 10 : 12; // allow even smaller minimum on mobile
 
       // Force single-line rendering when fitting
       el.style.whiteSpace = 'nowrap';
@@ -371,7 +374,7 @@ export function UniversalCard({
         ) : (
           <h3
             ref={titleRef}
-            className={`text-gray-900 ${titleSizeClass} leading-none font-bold truncate whitespace-nowrap single-line-title`}
+            className={`text-gray-900 ${titleSizeClass} leading-none font-bold truncate whitespace-nowrap single-line-title text-left w-full`}
             // font size controlled via state to ensure single-line fit (mapped to Tailwind classes to avoid inline styles)
             title={title}
           >
@@ -401,7 +404,7 @@ export function UniversalCard({
           <div className="absolute inset-0 bg-gray-900" />
         )}
 
-        {/* Play Button */}
+        {/* Play Button (hidden while video plays) */}
         {!isVideoPlaying && (
           <button
             className="absolute inset-0 flex items-center justify-center z-20"
@@ -414,109 +417,111 @@ export function UniversalCard({
           </button>
         )}
 
-        {/* QR Code - Top Right */}
-        <button
-          id={`qr-svg-${id}`}
-          onClick={async () => {
-            try {
-              // Create PDF with QR code and title - 8x10 format
-              const pdf = new jsPDF({
-                orientation: 'portrait',
-                unit: 'in',
-                format: [8, 10]
-              });
+        {/* QR Code - Top Right (hidden while video plays) */}
+        {!isVideoPlaying && (
+          <button
+            id={`qr-svg-${id}`}
+            onClick={async () => {
+              try {
+                // Create PDF with QR code and title - 8x10 format
+                const pdf = new jsPDF({
+                  orientation: 'portrait',
+                  unit: 'in',
+                  format: [8, 10]
+                });
 
-              const pageWidth = 8;
-              const marginTop = 0.5; // inches
-              const baseFontSize = 12; // uniform size for all text
+                const pageWidth = 8;
+                const marginTop = 0.5; // inches
+                const baseFontSize = 12; // uniform size for all text
 
-              // nAnoCard label (bold)
-              pdf.setFontSize(baseFontSize);
-              pdf.setFont('helvetica', 'bold');
-              const label = 'nAnoCard';
-              const labelWidth = pdf.getTextWidth(label);
-              const labelX = (pageWidth - labelWidth / 72) / 2; // center
-              pdf.text(label, labelX * 72, marginTop * 72);
+                // nAnoCard label (bold)
+                pdf.setFontSize(baseFontSize);
+                pdf.setFont('helvetica', 'bold');
+                const label = 'nAnoCard';
+                const labelWidth = pdf.getTextWidth(label);
+                const labelX = (pageWidth - labelWidth / 72) / 2; // center
+                pdf.text(label, labelX * 72, marginTop * 72);
 
-              // Title (normal, same size)
-              pdf.setFont('helvetica', 'normal');
-              const cardTitle = title.slice(0, 40);
-              const titleWidth = pdf.getTextWidth(cardTitle);
-              const titleX = (pageWidth - titleWidth / 72) / 2;
-              pdf.text(cardTitle, titleX * 72, (marginTop + 0.25) * 72);
+                // Title (normal, same size)
+                pdf.setFont('helvetica', 'normal');
+                const cardTitle = title.slice(0, 40);
+                const titleWidth = pdf.getTextWidth(cardTitle);
+                const titleX = (pageWidth - titleWidth / 72) / 2;
+                pdf.text(cardTitle, titleX * 72, (marginTop + 0.25) * 72);
 
-              // Information text (same font size)
-              const infoText = informationText || '';
-              const infoY = (marginTop + 0.55) * 72;
-              // Wrap information text to page width with a small inset
-              const infoMaxWidthPts = (pageWidth - 1) * 72; // 0.5in margin on each side
-              const infoLines = pdf.splitTextToSize(infoText, infoMaxWidthPts);
-              pdf.text(infoLines, 0.5 * 72, infoY);
+                // Information text (same font size)
+                const infoText = informationText || '';
+                const infoY = (marginTop + 0.55) * 72;
+                // Wrap information text to page width with a small inset
+                const infoMaxWidthPts = (pageWidth - 1) * 72; // 0.5in margin on each side
+                const infoLines = pdf.splitTextToSize(infoText, infoMaxWidthPts);
+                pdf.text(infoLines, 0.5 * 72, infoY);
 
-              // Contact email (same font size)
-              const contactLine = 'Contact: contact@nanocards.now';
-              const contactWidth = pdf.getTextWidth(contactLine);
-              const contactX = (pageWidth - contactWidth / 72) / 2;
-              pdf.text(contactLine, contactX * 72, (marginTop + 1.15) * 72);
+                // Contact email (same font size)
+                const contactLine = 'Contact: contact@nanocards.now';
+                const contactWidth = pdf.getTextWidth(contactLine);
+                const contactX = (pageWidth - contactWidth / 72) / 2;
+                pdf.text(contactLine, contactX * 72, (marginTop + 1.15) * 72);
 
-              // Add QR code as image - 15% smaller than previous (use inches)
-              const qrCanvas = document.createElement('canvas');
-              const qrSizePx = Math.round(150 * 0.85); // smaller pixel size
-              qrCanvas.width = qrSizePx;
-              qrCanvas.height = qrSizePx;
-              const qrCtx = qrCanvas.getContext('2d');
+                // Add QR code as image - 15% smaller than previous (use inches)
+                const qrCanvas = document.createElement('canvas');
+                const qrSizePx = Math.round(150 * 0.85); // smaller pixel size
+                qrCanvas.width = qrSizePx;
+                qrCanvas.height = qrSizePx;
+                const qrCtx = qrCanvas.getContext('2d');
 
-              if (qrCtx) {
-                // Fill white background
-                qrCtx.fillStyle = 'white';
-                qrCtx.fillRect(0, 0, qrSizePx, qrSizePx);
+                if (qrCtx) {
+                  // Fill white background
+                  qrCtx.fillStyle = 'white';
+                  qrCtx.fillRect(0, 0, qrSizePx, qrSizePx);
 
-                // Create QR code SVG and convert to canvas
-                const qrButton = document.getElementById(`qr-svg-${id}`);
-                const qrSvg = qrButton ? qrButton.querySelector('svg') : null;
-                if (qrSvg) {
-                  const svgData = new XMLSerializer().serializeToString(qrSvg);
-                  const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-                  const svgUrl = URL.createObjectURL(svgBlob);
+                  // Create QR code SVG and convert to canvas
+                  const qrButton = document.getElementById(`qr-svg-${id}`);
+                  const qrSvg = qrButton ? qrButton.querySelector('svg') : null;
+                  if (qrSvg) {
+                    const svgData = new XMLSerializer().serializeToString(qrSvg);
+                    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                    const svgUrl = URL.createObjectURL(svgBlob);
 
-                  const img = new Image();
-                  img.onload = () => {
-                    qrCtx.drawImage(img, 0, 0, qrSizePx, qrSizePx);
-                    const qrDataUrl = qrCanvas.toDataURL('image/png');
+                    const img = new Image();
+                    img.onload = () => {
+                      qrCtx.drawImage(img, 0, 0, qrSizePx, qrSizePx);
+                      const qrDataUrl = qrCanvas.toDataURL('image/png');
 
-                    // Add QR code to PDF - centered below the text
-                    const qrWidthIn = 2.5 * 0.85; // 15% smaller than 2.5in
-                    const qrHeightIn = qrWidthIn;
-                    const qrX = (pageWidth - qrWidthIn) / 2;
-                    const qrY = 2; // start ~2 inches from top to allow text above
-                    pdf.addImage(qrDataUrl, 'PNG', qrX, qrY, qrWidthIn, qrHeightIn);
+                      // Add QR code to PDF - centered below the text
+                      const qrWidthIn = 2.5 * 0.85; // 15% smaller than 2.5in
+                      const qrHeightIn = qrWidthIn;
+                      const qrX = (pageWidth - qrWidthIn) / 2;
+                      const qrY = 2; // start ~2 inches from top to allow text above
+                      pdf.addImage(qrDataUrl, 'PNG', qrX, qrY, qrWidthIn, qrHeightIn);
 
-                    // Add card URL below QR code - centered
-                    pdf.setFontSize(baseFontSize);
-                    pdf.setFont('helvetica', 'normal');
-                    const urlText = `Card URL: ${cardUrl}`;
-                    const urlWidth = pdf.getTextWidth(urlText);
-                    const urlX = (pageWidth - urlWidth / 72) / 2; // Center horizontally
-                    pdf.text(urlText, urlX * 72, (qrY + qrHeightIn + 0.3) * 72); // 0.3 inches below QR code
+                      // Add card URL below QR code - centered
+                      pdf.setFontSize(baseFontSize);
+                      pdf.setFont('helvetica', 'normal');
+                      const urlText = `Card URL: ${cardUrl}`;
+                      const urlWidth = pdf.getTextWidth(urlText);
+                      const urlX = (pageWidth - urlWidth / 72) / 2; // Center horizontally
+                      pdf.text(urlText, urlX * 72, (qrY + qrHeightIn + 0.3) * 72); // 0.3 inches below QR code
 
-                    // Save PDF
-                    pdf.save(`nAnoCard-${id}.pdf`);
-                    URL.revokeObjectURL(svgUrl);
-                    toast.success('PDF downloaded!');
-                  };
-                  img.src = svgUrl;
+                      // Save PDF
+                      pdf.save(`nAnoCard-${id}.pdf`);
+                      URL.revokeObjectURL(svgUrl);
+                      toast.success('PDF downloaded!');
+                    };
+                    img.src = svgUrl;
+                  }
                 }
+              } catch (error) {
+                console.error('Error generating PDF:', error);
+                toast.error('Failed to generate PDF');
               }
-            } catch (error) {
-              console.error('Error generating PDF:', error);
-              toast.error('Failed to generate PDF');
-            }
-          }}
-          className="absolute -top-[14px] right-3 bg-white rounded-xl p-2 shadow-lg hover:bg-gray-50 transition-colors z-0"
-          title="Download PDF with QR Code"
-        >
-          <QRCodeSVG value={cardUrl} size={80} level="M" includeMargin={false} />
-        </button>
+            }}
+            className="absolute -top-[14px] right-3 bg-white rounded-xl p-2 shadow-lg hover:bg-gray-50 transition-colors z-0"
+            title="Download PDF with QR Code"
+          >
+            <QRCodeSVG value={cardUrl} size={80} level="M" includeMargin={false} />
+          </button>
+        )}
 
         {/* Download Button */}
         <button
@@ -627,117 +632,155 @@ export function UniversalCard({
       </div>
 
       {/* Row 1 - Resource Icons (all gray, line only) */}
-      <div className="px-3 py-4 flex items-center justify-between border-b border-gray-100">
-        {/* Left icon group - close to left edge */}
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <button
-              className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
-              title="Information"
-              onMouseEnter={() => setShowInfoPopup(true)}
-              onMouseLeave={() => setShowInfoPopup(false)}
-            >
-              <Info className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-            </button>
-
-            {/* Info Popup */}
-            {showInfoPopup && (
-              <div
-                className="absolute bottom-full left-0 mb-2 z-50 pointer-events-none min-w-[280px] max-w-[340px]"
+      <div className="px-[5px] py-4 border-b border-gray-100">
+        {/* Single flex row with equal-width cells so icons are equally spaced across the card */}
+        <div className="flex items-center w-full">
+          <div className="flex-1 flex justify-center">
+            <div className="relative">
+              <button
+                className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
+                title="Information"
+                onMouseEnter={() => setShowInfoPopup(true)}
+                onMouseLeave={() => setShowInfoPopup(false)}
               >
-                <div className="relative px-5 py-4 bg-white text-gray-800 text-sm rounded-2xl shadow-xl border border-gray-200">
-                  <div className="text-gray-900 leading-relaxed break-words whitespace-pre-wrap">
-                    {informationText}
-                  </div>
-                  <div className="absolute top-full left-8">
-                    <svg width="24" height="12" viewBox="0 0 24 12" fill="none">
-                      <path d="M12 12C12 12 4 4 0 0H24C20 4 12 12 12 12Z" fill="white" stroke="#E5E7EB" strokeWidth="2" />
-                    </svg>
+                <Info className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+              </button>
+
+              {/* Info Popup */}
+              {showInfoPopup && (
+                <div className="absolute bottom-full left-0 mb-2 z-50 pointer-events-none min-w-[280px] max-w-[340px]">
+                  <div className="relative px-5 py-4 bg-white text-gray-800 text-sm rounded-2xl shadow-xl border border-gray-200">
+                    <div className="text-gray-900 leading-relaxed break-words whitespace-pre-wrap">
+                      {informationText}
+                    </div>
+                    <div className="absolute top-full left-8">
+                      <svg width="24" height="12" viewBox="0 0 24 12" fill="none">
+                        <path d="M12 12C12 12 4 4 0 0H24C20 4 12 12 12 12Z" fill="white" stroke="#E5E7EB" strokeWidth="2" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
-          <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Document">
-            <FileText className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-          </button>
-          <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Website">
-            <Globe className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-          </button>
-          <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="LinkedIn">
-            <Linkedin className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-          </button>
-        </div>
+          <div className="flex-1 flex justify-center">
+            <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Document">
+              <FileText className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+            </button>
+          </div>
 
-        {/* Right icon group - close to right edge */}
-        <div className="flex items-center gap-3">
-          <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Discord">
-            <MessageCircle className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-          </button>
-          <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="YouTube">
-            <Youtube className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-          </button>
-          <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="GitHub">
-            <Github className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-          </button>
-          <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Facebook">
-            <Facebook className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-          </button>
+          <div className="flex-1 flex justify-center">
+            <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Website">
+              <Globe className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+            </button>
+          </div>
+
+          <div className="flex-1 flex justify-center">
+            <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="LinkedIn">
+              <Linkedin className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+            </button>
+          </div>
+
+          <div className="flex-1 flex justify-center">
+            <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Discord">
+              <MessageCircle className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+            </button>
+          </div>
+
+          <div className="flex-1 flex justify-center">
+            <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="YouTube">
+              <Youtube className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+            </button>
+          </div>
+
+          <div className="flex-1 flex justify-center">
+            <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="GitHub">
+              <Github className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+            </button>
+          </div>
+
+          <div className="flex-1 flex justify-center">
+            <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Facebook">
+              <Facebook className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Row 2 - Share, Camera, Email, Link, Heart (RED), Card# */}
-      <div className="px-3 py-4 flex items-center justify-between">
-        {/* Left group */}
-        <div className="flex items-center gap-3">
-          <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Share">
-            <Share2 className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-          </button>
-          <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Camera">
-            <Camera className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-          </button>
-          <button className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors" title="Email">
-            <Mail className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
-          </button>
-
-          <button
-            onClick={handleCopyLink}
-            className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors focus:outline-none"
-            title={linkCopied ? "Copied to clipboard" : "Copy link"}
-            aria-label={linkCopied ? "Link copied" : "Copy link"}
-          >
-            <LinkIcon
-              className={`w-6 h-6 transition-colors text-blue-400 hover:text-blue-500`}
-              strokeWidth={1.5}
-            />
-          </button>
-        </div>
-
-        {/* Right group */}
-        <div className="flex items-center gap-3">
-          {/* Heart - THE ONLY COLORED ICON (red) */}
-          <button
-            onClick={onLike}
-            className="flex items-center gap-2 hover:bg-gray-50 px-2 py-1.5 rounded-lg transition-colors"
-          >
-            <Heart
-              className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : 'text-red-500'}`}
-              strokeWidth={1.5}
-            />
-            <span className="text-gray-900 font-bold text-lg">{likes}</span>
-          </button>
-
-          {/* Card number + edit pencil (ALWAYS VISIBLE) */}
-          <div className="flex flex-col items-center gap-0.5">
-            <span className="text-gray-600 font-semibold text-base">#{cardNumber}</span>
+      {/* Row 2 - evenly spaced icons across the card width */}
+      <div className="px-[5px] py-4 border-t border-gray-100">
+        <div className="flex items-center w-full">
+          <div className="flex-1 flex justify-center">
             <button
-              onClick={onToggleEdit || onEdit || (() => toast.error('You must be logged in to edit cards'))}
-              className="p-0.5 rounded hover:bg-gray-100 transition-colors"
-              title="Edit Card"
+              onClick={() => (window.location.href = '/')}
+              className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
+              title="Share"
             >
-              <Edit3 className="w-4 h-4 text-gray-400" strokeWidth={1.5} />
+              <Share2 className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
             </button>
+          </div>
+
+          <div className="flex-1 flex justify-center">
+            <button
+              onClick={() => (window.location.href = '/')}
+              className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
+              title="Camera"
+            >
+              <Camera className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+            </button>
+          </div>
+
+          <div className="flex-1 flex justify-center">
+            <button
+              onClick={() => (window.location.href = '/')}
+              className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
+              title="Email"
+            >
+              <Mail className="w-6 h-6 text-gray-400" strokeWidth={1.5} />
+            </button>
+          </div>
+
+          <div className="flex-1 flex justify-center">
+            <button
+              onClick={handleCopyLink}
+              type="button"
+              className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors focus:outline-none"
+              title={linkCopied ? "Copied to clipboard" : "Copy link"}
+              aria-label={linkCopied ? "Link copied" : "Copy link"}
+            >
+              <LinkIcon
+                className={`w-6 h-6 transition-colors ${linkCopied ? 'text-blue-600' : 'text-blue-400'} hover:text-blue-500`}
+                strokeWidth={1.5}
+              />
+            </button>
+          </div>
+
+          <div className="flex-1 flex justify-center">
+            <button
+              onClick={onLike}
+              className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-2"
+              title="Like"
+            >
+              <Heart
+                className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : 'text-red-500'}`}
+                strokeWidth={1.5}
+              />
+              <span className="sr-only">{likes} likes</span>
+            </button>
+          </div>
+
+          <div className="flex-1 flex justify-center">
+            <div className="flex flex-col items-center gap-0.5">
+              <a href="/" className="text-gray-600 font-semibold text-base">#{cardNumber}</a>
+              <button
+                onClick={onToggleEdit || onEdit || (() => toast.error('You must be logged in to edit cards'))}
+                className="p-0.5 rounded hover:bg-gray-100 transition-colors mt-1"
+                title="Edit Card"
+              >
+                <Edit3 className="w-4 h-4 text-gray-400" strokeWidth={1.5} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
